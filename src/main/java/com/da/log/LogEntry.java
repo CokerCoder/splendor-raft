@@ -4,8 +4,8 @@ import com.da.common.Command;
 
 public class LogEntry implements Comparable {
     
-    private Long index;
-    private long term;
+    private int index;
+    private int term;
     private Command command;
     
     @Override
