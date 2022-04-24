@@ -1,6 +1,6 @@
 package com.da.entity;
 
-public class AppendEntriesRpc {
+public class AppendEntriesRequest {
     
     private int term;
     private int leaderId;
