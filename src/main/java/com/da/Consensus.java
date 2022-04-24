@@ -1,9 +1,9 @@
 package com.da;
 
 import com.da.entity.AppendEntriesResult;
-import com.da.entity.AppendEntriesRpc;
+import com.da.entity.AppendEntriesRequest;
 import com.da.entity.RequestVoteResult;
-import com.da.entity.RequestVoteRpc;
+import com.da.entity.RequestVoteRequest;
 
 /**
  * Base consensus interface RAFT needs to implement
@@ -11,8 +11,8 @@ import com.da.entity.RequestVoteRpc;
 public interface Consensus {
 
 
-    RequestVoteResult requestVote(RequestVoteRpc request);
+    RequestVoteResult requestVote(RequestVoteRequest request);
 
-    AppendEntriesResult appendEntries(AppendEntriesRpc request);
+    AppendEntriesResult appendEntries(AppendEntriesRequest request);
     
 }
