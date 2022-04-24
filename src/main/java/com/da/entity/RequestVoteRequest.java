@@ -1,6 +1,6 @@
 package com.da.entity;
 
-public class RequestVoteRpc {
+public class RequestVoteRequest {
     
     private int term;
     private int candidateId;
