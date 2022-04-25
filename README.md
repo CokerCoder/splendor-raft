@@ -11,9 +11,11 @@
                         ├── entity
                         ├── log           # Log replication
                         ├── node          # Leader election 
+                        ├── proto
+                        ├── raft          # core RAFT algorithm
                         ├── rpc           # RPC communication
-                        └── App.java      # App entry
-        └── test                          # Unit tests
+                        └── App.java      
+        └── test                          
     ├── target                     
     ├── pom.xml                  
     ├── LICENSE
@@ -30,3 +32,15 @@
 - Leader election
 - Log replication
 - KV store client (command line interface)
+
+
+## Docs
+node/Node.java定义了每个节点的行为接口。
+
+raft/Consensus.java定义了共识算法的核心逻辑。
+
+相对应的实现为**RaftNode**和**RaftConsensus**，这两个类为Raft算法最核心的实现。
+
+### Leader Election
+
+
