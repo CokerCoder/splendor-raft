@@ -1,5 +1,7 @@
 package com.da.node.roles;
 
+import com.da.node.NodeId;
+
 public class CandidateNodeRole extends AbstractNodeRole {
 
     private final int votesCount;
@@ -14,8 +16,8 @@ public class CandidateNodeRole extends AbstractNodeRole {
     }
 
     @Override
-    public int getLeaderId(int selfId) {
-        return -1; // no leader when as candidate
+    public NodeId getLeaderId(NodeId selfId) {
+        return null; // no leader when as candidate
     }
     
 }

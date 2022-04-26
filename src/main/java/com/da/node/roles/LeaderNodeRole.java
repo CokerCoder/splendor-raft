@@ -1,5 +1,7 @@
 package com.da.node.roles;
 
+import com.da.node.NodeId;
+
 public class LeaderNodeRole extends AbstractNodeRole {
 
     public LeaderNodeRole(int term) {
@@ -7,7 +9,7 @@ public class LeaderNodeRole extends AbstractNodeRole {
     }
 
     @Override
-    public int getLeaderId(int selfId) {
+    public NodeId getLeaderId(NodeId selfId) {
         return selfId;
     }
 

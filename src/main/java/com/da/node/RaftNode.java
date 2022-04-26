@@ -1,8 +1,8 @@
 package com.da.node;
 
-import com.da.entity.AppendEntriesRequest;
+import com.da.entity.AppendEntriesRpc;
 import com.da.entity.AppendEntriesResult;
-import com.da.entity.RequestVoteRequest;
+import com.da.entity.RequestVoteRpc;
 import com.da.entity.RequestVoteResult;
 import com.da.node.roles.AbstractNodeRole;
 import com.da.raft.Consensus;
@@ -35,12 +35,12 @@ public class RaftNode implements Node {
     }
 
     @Override
-    public RequestVoteResult handleRequestVote(RequestVoteRequest request) {
+    public RequestVoteResult handleRequestVote(RequestVoteRpc request) {
         return consensus.requestVote(request);
     }
 
     @Override
-    public AppendEntriesResult handleAppendEntries(AppendEntriesRequest request) {
+    public AppendEntriesResult handleAppendEntries(AppendEntriesRpc request) {
         return consensus.appendEntries(request);
     }
 

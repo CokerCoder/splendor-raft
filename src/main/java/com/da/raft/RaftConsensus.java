@@ -1,8 +1,8 @@
 package com.da.raft;
 
-import com.da.entity.AppendEntriesRequest;
+import com.da.entity.AppendEntriesRpc;
 import com.da.entity.AppendEntriesResult;
-import com.da.entity.RequestVoteRequest;
+import com.da.entity.RequestVoteRpc;
 import com.da.entity.RequestVoteResult;
 import com.da.node.Node;
 
@@ -18,13 +18,13 @@ public class RaftConsensus implements Consensus {
     }
 
     @Override
-    public RequestVoteResult requestVote(RequestVoteRequest request) {
+    public RequestVoteResult requestVote(RequestVoteRpc request) {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public AppendEntriesResult appendEntries(AppendEntriesRequest request) {
+    public AppendEntriesResult appendEntries(AppendEntriesRpc request) {
         // TODO Auto-generated method stub
         return null;
     }

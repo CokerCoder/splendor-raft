@@ -2,9 +2,9 @@ package com.da.rpc;
 
 import java.util.Collection;
 
-import com.da.entity.AppendEntriesRequest;
+import com.da.entity.AppendEntriesRpc;
 import com.da.entity.AppendEntriesResult;
-import com.da.entity.RequestVoteRequest;
+import com.da.entity.RequestVoteRpc;
 import com.da.entity.RequestVoteResult;
 import com.da.node.Node;
 
@@ -15,11 +15,11 @@ public interface RPCAdapter {
     void initialize();
 
     // 这里的Node并不是地址类，需要新增Node地址类
-    void sendRequestVote(RequestVoteRequest request, Collection<Node> destinations);
+    void sendRequestVote(RequestVoteRpc request, Collection<Node> destinations);
 
     void replyRequestVote(RequestVoteResult result, Node destination);
 
-    void sendAppendEntries(AppendEntriesRequest request, Collection<Node> destinations);
+    void sendAppendEntries(AppendEntriesRpc request, Collection<Node> destinations);
 
     void replyAppendEntries(AppendEntriesResult result, Node destination);
 

@@ -1,9 +1,9 @@
 package com.da.node;
 
 import com.da.LifeCycle;
-import com.da.entity.AppendEntriesRequest;
+import com.da.entity.AppendEntriesRpc;
 import com.da.entity.AppendEntriesResult;
-import com.da.entity.RequestVoteRequest;
+import com.da.entity.RequestVoteRpc;
 import com.da.entity.RequestVoteResult;
 
 /**
@@ -12,10 +12,10 @@ import com.da.entity.RequestVoteResult;
 public interface Node extends LifeCycle {
     
     // 处理请求投票rpc请求
-    RequestVoteResult handleRequestVote(RequestVoteRequest request);
+    RequestVoteResult handleRequestVote(RequestVoteRpc request);
 
     // 处理附加日志rpc请求
-    AppendEntriesResult handleAppendEntries(AppendEntriesRequest request);
+    AppendEntriesResult handleAppendEntries(AppendEntriesRpc request);
 
     // 客户端请求
     // ...

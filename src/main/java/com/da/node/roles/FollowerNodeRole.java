@@ -1,26 +1,28 @@
 package com.da.node.roles;
 
+import com.da.node.NodeId;
+
 public class FollowerNodeRole extends AbstractNodeRole {
 
-    private final int votedFor;
-    private final int leaderId;
+    private final NodeId votedFor;
+    private final NodeId leaderId;
 
-    public FollowerNodeRole(int term, int votedFor, int leaderId) {
+    public FollowerNodeRole(int term, NodeId votedFor, NodeId leaderId) {
         super(RoleName.FOLLOWER, term);
         this.votedFor = votedFor;
         this.leaderId = leaderId;
     }
 
-    public int getVotedFor() {
+    public NodeId getVotedFor() {
         return votedFor;
     }
 
-    public int getLeaderId() {
+    public NodeId getLeaderId() {
         return leaderId;
     }
 
     @Override
-    public int getLeaderId(int selfId) {
+    public NodeId getLeaderId(NodeId selfId) {
         return leaderId;
     }
     
