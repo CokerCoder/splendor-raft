@@ -10,7 +10,7 @@
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
-      <module name="splendor-raft" target="1.7" />
+      <module name="splendor-raft" target="8" />
     </bytecodeTargetLevel>
   </component>
 </project>
