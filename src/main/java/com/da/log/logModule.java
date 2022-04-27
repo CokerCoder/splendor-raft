@@ -4,11 +4,11 @@ public interface logModule {
 
     void write(LogEntry logEntry);
 
-    LogEntry read(Long index);
+    LogEntry read(int index);
 
     void removeFromIndex(Long startIndex);
 
     LogEntry getLastEntry();
 
-    Long getLastIndex();
+    int getLastIndex();
 }
