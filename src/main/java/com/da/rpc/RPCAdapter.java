@@ -5,20 +5,37 @@ import com.da.node.Node;
 
 
 /**
- * 最终RPC服务转换成的适配器接口，RPC service暂时没有实现
+ * The definition of the PRC service instance
  */
 public interface RPCAdapter {
 
-    // 开始监听端口
-    void listenOn(int port);
+    /**
+     * Start a RPC server listening to port
+     * @param port The port is monitored by the node
+     */
+    void listen(int port);
 
-    // destination 类型待定（需要address和port)
-    // RPC 需调用 Node的 XXXResult handleXXX(XXXRpc)
+    /**
+     * Send request vote message to the other node
+     * @param request The request information
+     * @param destination The target node
+     * @return The rpc result
+     *  destination 类型待定（需要address和port)
+     *  RPC 需调用 Node的 XXXResult handleXXX(XXXRpc)
+     */
     RequestVoteResult requestVoteRPC(RequestVoteRpc request, Node destination);
 
+    /**
+     * Send append entries message to the other node
+     * @param request The request information
+     * @param destination The target node
+     * @return The rpc result
+     */
     AppendEntriesResult appendEntriesRPC(AppendEntriesRpc request, Node destination);
 
-    // 关闭所有连接
+    /**
+     * Close all connection to other nodes and stop listening
+     */
     void close();
 
 }
