@@ -25,6 +25,21 @@
       <version>4.11</version>
       <scope>test</scope>
     </dependency>
+
+    <!-- lombok get set-->
+    <dependency>
+      <groupId>org.projectlombok</groupId>
+      <artifactId>lombok</artifactId>
+      <version>1.18.2</version>
+    </dependency>
+
+    <!-- rocksDB -->
+    <dependency>
+      <groupId>org.rocksdb</groupId>
+      <artifactId>rocksdbjni</artifactId>
+      <version>5.14.3</version>
+    </dependency>
+
     <dependency>
       <groupId>io.grpc</groupId>
       <artifactId>grpc-netty-shaded</artifactId>
