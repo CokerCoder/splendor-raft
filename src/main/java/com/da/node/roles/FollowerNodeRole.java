@@ -1,16 +1,20 @@
 package com.da.node.roles;
 
 import com.da.node.NodeId;
+import com.da.scheduler.ElectionTimeoutTask;
 
 public class FollowerNodeRole extends AbstractNodeRole {
 
     private final NodeId votedFor;
     private final NodeId leaderId;
 
-    public FollowerNodeRole(int term, NodeId votedFor, NodeId leaderId) {
+    private final ElectionTimeoutTask electionTimeout; // election timeout task
+
+    public FollowerNodeRole(int term, NodeId votedFor, NodeId leaderId, ElectionTimeoutTask electionTimeout) {
         super(RoleName.FOLLOWER, term);
         this.votedFor = votedFor;
         this.leaderId = leaderId;
+        this.electionTimeout = electionTimeout;
     }
 
     public NodeId getVotedFor() {
@@ -22,8 +26,8 @@ public class FollowerNodeRole extends AbstractNodeRole {
     }
 
     @Override
-    public NodeId getLeaderId(NodeId selfId) {
-        return leaderId;
+    public void cancelTimeoutOrTask() {
+        electionTimeout.cancel();
     }
-    
+
 }
