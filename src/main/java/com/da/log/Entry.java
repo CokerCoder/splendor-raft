@@ -6,7 +6,7 @@ public interface Entry {
     int KIND_GENERAL=1;
     //获取类型
     int getKind();
-    //获取suoyin
+    //获取索引
     int getIndex();
     //获取term
     int getTerm();

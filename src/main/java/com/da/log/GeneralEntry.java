@@ -4,7 +4,7 @@ package com.da.log;
 public class GeneralEntry extends AbstractEntry{
     private final byte[] commandBytes;
 
-    public GeneralEntry(int kind, int index, int term, byte[] commandBytes) {
+    public GeneralEntry(int index, int term, byte[] commandBytes) {
         super(KIND_GENERAL, index, term);
         this.commandBytes = commandBytes;
     }

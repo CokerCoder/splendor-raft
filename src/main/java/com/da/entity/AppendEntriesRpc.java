@@ -1,6 +1,7 @@
 
 package com.da.entity;
 import com.da.log.LogEntry;
+import com.da.node.NodeId;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -12,7 +13,7 @@ public class AppendEntriesRpc {
     private int term;
 
     /** 领导人ID */
-    private int leaderId;
+    private NodeId leaderId;
 
     /** 紧邻新日志前的那个日志条目的索引 */
     private int prevLogIndex;
