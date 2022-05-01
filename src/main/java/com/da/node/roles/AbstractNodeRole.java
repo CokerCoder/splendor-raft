@@ -16,13 +16,14 @@ public abstract class AbstractNodeRole {
     }
 
     public RoleName getName() {
-        return name;
+        return name; 
     }
 
     public int getTerm() {
         return term;
     }
 
-    public abstract NodeId getLeaderId(NodeId selfId);
+    // 取消超时或者定时任务
+    public abstract void cancelTimeoutOrTask();
 
 }
