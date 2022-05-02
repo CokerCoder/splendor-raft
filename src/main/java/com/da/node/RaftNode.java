@@ -12,7 +12,11 @@ import com.da.node.roles.CandidateNodeRole;
 import com.da.node.roles.FollowerNodeRole;
 import com.da.node.roles.LeaderNodeRole;
 import com.da.node.roles.RoleName;
+import com.da.rpc.messages.AppendEntriesResultMessage;
+import com.da.rpc.messages.AppendEntriesRpcMessage;
+import com.da.rpc.messages.RequestVoteRpcMessage;
 import com.da.scheduler.ElectionTimeoutTask;
+import com.da.scheduler.LogReplicationTask;
 import com.google.common.eventbus.Subscribe;
 
 
@@ -21,6 +25,10 @@ public class RaftNode implements Node {
     private final NodeContext context;
     private boolean started;
     private volatile AbstractNodeRole role;
+
+    public AbstractNodeRole getRole() {
+        return role;
+    }
 
     RaftNode(NodeContext context) {
         this.context = context;
@@ -60,7 +68,12 @@ public class RaftNode implements Node {
         role.cancelTimeoutOrTask();
         changeToRole(new CandidateNodeRole(newTerm, scheduleElectionTimeout()));
 
-        // TODO: 发送RequestVoteRpc消息
+        RequestVoteRpc rpc = new RequestVoteRpc();
+        rpc.setTerm(newTerm);
+        rpc.setCandidateId(context.selfId());
+        rpc.setLastLogIndex(0);
+        rpc.setLastLogTerm(0);
+        context.rpcAdapter().sendRequestVote(rpc, context.group().listEndPointExceptSelf());
 
     }
 
@@ -86,16 +99,16 @@ public class RaftNode implements Node {
         return context.scheduler().scheduleElectionTimeoutTask(this::electionTimeout);
     }
 
-    // private LogReplicationTask scheduleLogReplicationTask() {
-    //     return context.scheduler().scheduleLogReplicationTask(this::replicateLog);
-    // 
+    private LogReplicationTask scheduleLogReplicationTask() {
+        return context.scheduler().scheduleLogReplicationTask(this::replicateLog);
+    }
 
     @Subscribe
     public void onReceiveRequestVoteRpc(RequestVoteRpcMessage rpcMessage) {
         context.taskExecutor().submit(
                 () -> context.rpcAdapter().replyRequestVote(
                     doProcessRequestVoteRpc(rpcMessage),
-                    context.findMember(rpcMessage.getSourceNodeId()).getEndPoint())
+                    context.group().getMember(rpcMessage.getSourceNodeId()).getEndpoint())
         );
     }
 
@@ -166,7 +179,8 @@ public class RaftNode implements Node {
         if (currentVotesCount > countOfMajor / 2) {
             // become leader
             changeToRole(new LeaderNodeRole(role.getTerm(), scheduleLogReplicationTask()));
-            context.rpcAdapter().resetChannels(); // close all inbound channels
+
+
         } else {
 
             // update votes count
@@ -188,7 +202,11 @@ public class RaftNode implements Node {
     private void doReplicateLog(GroupMember member) {
         AppendEntriesRpc rpc = new AppendEntriesRpc();
         // set appendEntries attributes
-        // TODO:
+        rpc.setTerm(role.getTerm());
+        rpc.setLeaderId(context.selfId());
+        rpc.setPrevLogIndex(0);
+        rpc.setPrevLogTerm(0);
+        rpc.setLeaderCommit(0);
 
         context.rpcAdapter().sendAppendEntries(rpc, member.getEndpoint());
     }
@@ -198,7 +216,7 @@ public class RaftNode implements Node {
     public void onReceiveAppendEntriesRpc(AppendEntriesRpcMessage rpcMessage) {
         context.taskExecutor().submit(() ->
                         context.rpcAdapter().replyAppendEntries(doProcessAppendEntriesRpc(rpcMessage), 
-                        context.findMember(rpcMessage.getSourceNodeId()).getEndPoint()));
+                        context.group().getMember(rpcMessage.getSourceNodeId()).getEndpoint()));
     }
 
     private AppendEntriesResult doProcessAppendEntriesRpc(AppendEntriesRpcMessage rpcMessage) {
@@ -221,14 +239,14 @@ public class RaftNode implements Node {
             case FOLLOWER:
                 // reset election timeout and append entries
                 becomeFollower(rpc.getTerm(), ((FollowerNodeRole) role).getVotedFor(), rpc.getLeaderId(), true);
-                return new AppendEntriesResult(rpc.getMessageId(), rpc.getTerm(), appendEntries(rpc));
+                return new AppendEntriesResult(rpc.getTerm(), appendEntries(rpc));
             case CANDIDATE:
 
                 // more than one candidate but another node won the election
                 becomeFollower(rpc.getTerm(), null, rpc.getLeaderId(), true);
-                return new AppendEntriesResult(rpc.getMessageId(), rpc.getTerm(), appendEntries(rpc));
+                return new AppendEntriesResult(rpc.getTerm(), appendEntries(rpc));
             case LEADER:
-                return new AppendEntriesResult(rpc.getMessageId(), rpc.getTerm(), false);
+                return new AppendEntriesResult(rpc.getTerm(), false);
             default:
                 throw new IllegalStateException("unexpected node role [" + role.getName() + "]");
         }
@@ -241,11 +259,6 @@ public class RaftNode implements Node {
     }
 
 
-    /**
-     * Receive append entries result.
-     *
-     * @param resultMessage result message
-     */
     @Subscribe
     public void onReceiveAppendEntriesResult(AppendEntriesResultMessage resultMessage) {
         context.taskExecutor().submit(() -> doProcessAppendEntriesResult(resultMessage));

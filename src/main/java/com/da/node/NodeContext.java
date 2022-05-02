@@ -53,4 +53,25 @@ public class NodeContext {
         return rpcAdapter;
     }
 
+
+    public void setGroup(NodeGroup group) {
+        this.group = group;
+    }
+
+    public void setEventBus(EventBus eventBus) {
+        this.eventBus = eventBus;
+    }
+
+    public void setScheduler(Scheduler scheduler) {
+        this.scheduler = scheduler;
+    }
+
+    public void setRPCAdapter(RPCAdapter rpcAdapter) {
+        this.rpcAdapter = rpcAdapter;
+    }
+
+    public void setTaskExecutor(TaskExecutor taskExecutor) {
+        this.taskExecutor = taskExecutor;
+    }
+
 }

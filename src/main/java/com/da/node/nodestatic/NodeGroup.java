@@ -16,7 +16,7 @@ public class NodeGroup {
     }
 
     //多节点构造
-    NodeGroup(Collection<NodeEndpoint> endpoints, NodeId selfId){
+    public NodeGroup(Collection<NodeEndpoint> endpoints, NodeId selfId){
         this.memberMap = buildMemberMap(endpoints);
         this.selfId = selfId;
     }
@@ -42,7 +42,7 @@ public class NodeGroup {
     }
 
     //按照节点ID查找成员，找不到返回空,例如集群刚启动时Follower不会有有效的leaderId
-    GroupMember getMember(NodeId id){
+    public GroupMember getMember(NodeId id){
         return memberMap.get(id);
     }
 
@@ -52,7 +52,7 @@ public class NodeGroup {
 
     }
 
-    Set<NodeEndpoint> listEndpointExceptSelf(){
+    public Set<NodeEndpoint> listEndPointExceptSelf(){
         Set<NodeEndpoint> endpoints = new HashSet<>();
         for(GroupMember member:memberMap.values()){
             //判断是否为当前节点
@@ -61,6 +61,10 @@ public class NodeGroup {
             }
         }
         return endpoints;
+    }
+
+    public int getCount() {
+        return memberMap.size();
     }
 
 }

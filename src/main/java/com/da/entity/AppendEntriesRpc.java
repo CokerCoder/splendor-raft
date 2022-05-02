@@ -1,7 +1,6 @@
 
 package com.da.entity;
 import com.da.log.Entry;
-import com.da.log.LogEntry;
 import com.da.node.NodeId;
 import lombok.Getter;
 import lombok.Setter;
@@ -29,5 +28,42 @@ public class AppendEntriesRpc {
 
     /** 领导人已经提交的日志的索引值  */
     private int leaderCommit;
+
+    public int getTerm() {
+        return term;
+    }
+
+    public NodeId getLeaderId() {
+        return leaderId;
+    }
+
+    public int getPrevLogIndex() {
+        return prevLogIndex;
+    }
+
+    public int getPrevLogTerm() {
+        return prevLogTerm;
+    }
+
+
+    public void setTerm(int term) {
+        this.term = term;
+    }
+
+    public void setLeaderId(NodeId leaderId) {
+        this.leaderId = leaderId;
+    }
+
+    public void setPrevLogIndex(int prevLogIndex) {
+        this.prevLogIndex = prevLogIndex;
+    }
+
+    public void setPrevLogTerm(int prevLogTerm) {
+        this.prevLogTerm = prevLogTerm;
+    }
+
+    public void setLeaderCommit(int leaderCommit) {
+        this.leaderCommit = leaderCommit;
+    }
     
 }

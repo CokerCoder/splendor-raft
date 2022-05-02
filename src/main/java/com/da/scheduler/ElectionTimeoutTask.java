@@ -4,6 +4,7 @@ import java.util.concurrent.ScheduledFuture;
 
 public class ElectionTimeoutTask {
     private final ScheduledFuture<?> scheduledFuture;
+    public static final ElectionTimeoutTask NONE = new ElectionTimeoutTask(new NullScheduledFuture());
 
     public ElectionTimeoutTask(ScheduledFuture<?> scheduledFuture) {
         this.scheduledFuture = scheduledFuture;
