@@ -26,7 +26,7 @@ public class FileEntrySequence extends AbstractEntrySequence{
             this.entryIndexFile = new EntryIndexFile(logDir.getEntryOffsetIndexFile());
             initialize();
         }catch (IOException e){
-            throw new LogException("Fail to open entries file or entry index file", e);
+            throw new IllegalStateException("Fail to open entries file or entry index file",e);
         }
     }
 
@@ -48,6 +48,7 @@ public class FileEntrySequence extends AbstractEntrySequence{
     public int getCommitIndex(){
         return commitIndex;
     }
+
 
     @Override
     protected List<Entry> doSubList(int fromIndex, int toIndex) {
@@ -109,7 +110,7 @@ public class FileEntrySequence extends AbstractEntrySequence{
         try{
             return entriesFile.loadEntry(offset, entryFactory);
         }catch (IOException e){
-            throw new LogException("fail to load entry "+ index, e);
+            throw new IllegalStateException("fail to load entry "+ index, e);
         }
     }
 
@@ -157,7 +158,7 @@ public class FileEntrySequence extends AbstractEntrySequence{
                 commitIndex = logIndexOffset-1;
             }
         }catch (IOException e){
-            throw new LogException(e);
+            throw new IllegalStateException(e);
         }
     }
 
@@ -189,7 +190,12 @@ public class FileEntrySequence extends AbstractEntrySequence{
                 commitIndex = i;
             }
         }catch (IOException e){
-            throw new LogException("fail to commit entry "+ entry, e);
+            throw new IllegalStateException("fail to commit entry "+ entry, e);
         }
+    }
+
+    @Override
+    public void close() {
+
     }
 }

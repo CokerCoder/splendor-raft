@@ -68,7 +68,7 @@ public abstract class AbstractLog implements Log {
     }
 
     //追加一般日志
-    public GeneralEntry appenEntry(int term, byte[] command){
+    public GeneralEntry appendEntry(int term, byte[] command){
         GeneralEntry entry = new GeneralEntry(entrySequence.getNextLogIndex(), term, command);
         entrySequence.append(entry);
         return entry;

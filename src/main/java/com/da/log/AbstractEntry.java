@@ -1,6 +1,6 @@
 package com.da.log;
 
-public class AbstractEntry implements Entry{
+public abstract class AbstractEntry implements Entry{
     private final int kind;
     protected final int index;
     protected final int term;

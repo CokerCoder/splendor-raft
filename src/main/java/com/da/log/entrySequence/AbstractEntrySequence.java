@@ -74,7 +74,7 @@ public abstract class AbstractEntrySequence implements EntrySequence{
     }
 
     //获得序列子视图，指定范围
-    public LogEntry[] subList(int fromIndex, int toIndex){
+    public List<Entry> subList(int fromIndex, int toIndex){
         if(isEmpty()){
             throw new IllegalStateException("EntrySequence is empty");
         }
@@ -115,7 +115,6 @@ public abstract class AbstractEntrySequence implements EntrySequence{
 
     protected abstract void doRemoveAfter(int index);
 
-    //void commit(int index);
-    //int getCommitIndex();
+
     //void close();
 }

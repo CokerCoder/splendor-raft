@@ -1,9 +1,12 @@
 
 package com.da.entity;
+import com.da.log.Entry;
 import com.da.log.LogEntry;
 import com.da.node.NodeId;
 import lombok.Getter;
 import lombok.Setter;
+
+import java.util.List;
 
 @Setter
 @Getter
@@ -22,7 +25,7 @@ public class AppendEntriesRpc {
     private int prevLogTerm;
 
     /** 准备存储的日志条目（表示心跳时为空；可以一次性发送多个） */
-    private LogEntry[] entries;
+    private List<Entry> entries;
 
     /** 领导人已经提交的日志的索引值  */
     private int leaderCommit;

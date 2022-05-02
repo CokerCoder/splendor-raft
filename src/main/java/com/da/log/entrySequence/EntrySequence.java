@@ -12,7 +12,7 @@ public interface EntrySequence {
     int getLastLogIndex();
     int getNextLogIndex();
     List<Entry> subList(int fromIndex);    //获得序列的子视图
-    LogEntry[] subList(int fromIndex, int toIndex); //获得序列子视图，指定范围
+    List<Entry> subList(int fromIndex, int toIndex); //获得序列子视图，指定范围
     boolean isEntryPresent(int index);
     EntryMeta getEntryMeta(int index);
     Entry getEntry(int index);

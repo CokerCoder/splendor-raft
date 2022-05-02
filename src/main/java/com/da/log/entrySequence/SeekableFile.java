@@ -14,7 +14,7 @@ public interface SeekableFile {
     int read(byte[] b) throws IOException ;
     long size() throws IOException ;
     void truncate(long size ) throws IOException ; //裁剪到指定大小
-    InputStream inputStream(long start)  throws IOException;   //获取从指定位置开始的输入流
+    InputStream inputStream(long start)  throws IOException;  //获取从指定位置开始的输入流,用于日志快照
     void flush()  throws IOException;   //强制输出到磁盘
     void close()  throws IOException;
 }

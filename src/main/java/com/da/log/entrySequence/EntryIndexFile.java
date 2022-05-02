@@ -131,6 +131,15 @@ public class EntryIndexFile implements Iterable<EntryIndexItem>{
         return entryIndexCount==0;
     }
 
+    //自加
+    public EntryIndexItem get(int index) {
+        return entryIndexMap.get(index);
+    }
+
+    //自加
+    public long getOffset(int index) {
+        return entryIndexMap.get(index).getOffset();
+    }
 
     private class EntryIndexIterator implements Iterator<EntryIndexItem>{
         private final int entryIndexCount;

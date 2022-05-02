@@ -4,6 +4,7 @@ public class EntryMeta {
     private int kind;
     private int index;
     private int term;
+
     public EntryMeta(int kind, int index, int term) {
         this.kind = kind;
         this.index = index;
