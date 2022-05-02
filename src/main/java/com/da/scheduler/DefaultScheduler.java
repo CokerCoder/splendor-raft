@@ -49,8 +49,6 @@ public class DefaultScheduler implements Scheduler {
             this.scheduledExecutorService.scheduleWithFixedDelay(
                 task, logReplicationDelay, logReplicationInterval, TimeUnit.MILLISECONDS);
 
-
-
         return new LogReplicationTask(scheduledFuture);
     }
 

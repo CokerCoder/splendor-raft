@@ -7,7 +7,6 @@ public class RequestVoteRpc {
     private int term;
     private NodeId candidateId;
 
-
     private int lastLogIndex; // 候选者最后一条日志索引
     private int lastLogTerm; // 候选者最后一条日志term
 

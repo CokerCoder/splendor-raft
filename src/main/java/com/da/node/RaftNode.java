@@ -36,6 +36,7 @@ public class RaftNode implements Node {
         return role;
     }
 
+
     RaftNode(NodeContext context) {
         this.context = context;
     }
@@ -146,6 +147,7 @@ public class RaftNode implements Node {
             return new RequestVoteResult(role.getTerm(), false);
         }
         // 此处无条件投票
+
         boolean voteForCandidate = !context.log().isNewerThan(rpc.getLastLogIndex(), rpc.getLastLogTerm());
 
         // step down if result's term is larger than current term
@@ -245,6 +247,7 @@ public class RaftNode implements Node {
     private void doReplicateLog(GroupMember member, int maxEntries) {
         // AppendEntriesRpc rpc = new AppendEntriesRpc();
         // set appendEntries attributes
+
         AppendEntriesRpc rpc = context.log().createAppendEntriesRpc(role.getTerm(), context.selfId(), member.getNextIndex(), maxEntries);
 
         context.rpcAdapter().sendAppendEntries(rpc, member.getEndpoint());
