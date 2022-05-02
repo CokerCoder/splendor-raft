@@ -18,13 +18,17 @@ import com.da.rpc.messages.RequestVoteRpcMessage;
 import com.da.scheduler.ElectionTimeoutTask;
 import com.da.scheduler.LogReplicationTask;
 import com.google.common.eventbus.Subscribe;
+import com.sun.org.slf4j.internal.Logger;
+import com.sun.org.slf4j.internal.LoggerFactory;
 
 
 public class RaftNode implements Node {
 
-    private final NodeContext context;
-    private boolean started;
-    private volatile AbstractNodeRole role;
+    private static final Logger LOGGER = LoggerFactory.getLogger(RaftNode.class); // slf4j 日志
+
+    private final NodeContext context; // 核心上下文组件
+    private boolean started; //是否已经启动
+    private volatile AbstractNodeRole role; // 当前的角色与信息
 
     public AbstractNodeRole getRole() {
         return role;
@@ -38,11 +42,16 @@ public class RaftNode implements Node {
         return context;
     }
 
+    /**
+     * 系统启动时，在EventBus中注册自己感兴趣的消息，以及初始化RPC组件，切换角色为Follower, 并且设置选举超时
+     */
     @Override
     public synchronized void start() {
+        // 如果已经启动则直接跳过
         if (started) {
             return;
         }
+        // 注册到自己的eventbus
         context.eventBus().register(this);
         context.rpcAdapter().initialize();
 
@@ -59,13 +68,17 @@ public class RaftNode implements Node {
 
     private void doProcessElectionTimeout() {
         if (role.getName() == RoleName.LEADER) {
+            LOGGER.debug("node {}, current role is leader, ignore election timeout", context.selfId());
             return;
         }
 
         // follower: start election
         // candidate: restart election
+        // increase the term
         int newTerm = role.getTerm() + 1;
         role.cancelTimeoutOrTask();
+        LOGGER.debug("start election");
+        // 变成candidate 角色
         changeToRole(new CandidateNodeRole(newTerm, scheduleElectionTimeout()));
 
         RequestVoteRpc rpc = new RequestVoteRpc();
@@ -78,15 +91,18 @@ public class RaftNode implements Node {
     }
 
     private void becomeFollower(int term, NodeId votedFor, NodeId leaderId, boolean scheduleElectionTimeout) {
-        role.cancelTimeoutOrTask();
+        role.cancelTimeoutOrTask(); // 取消超时或者定时器
         // if (leaderId != null && !leaderId.equals(role.getLeaderId(context.selfId()))) {
         //     logger.info("current leader is {}, term {}", leaderId, term);
         // }
+        // 重新创建选举超时定时器
         ElectionTimeoutTask electionTimeout = scheduleElectionTimeout();
         changeToRole(new FollowerNodeRole(term, votedFor, leaderId, electionTimeout));
     }
 
     private void changeToRole(AbstractNodeRole newRole) {
+        LOGGER.debug("node {}, role state changed -> {}", context.selfId(), newRole);
+
         NodeStore store = context.store();
         store.setTerm(newRole.getTerm());
         if (newRole.getName() == RoleName.FOLLOWER) {
@@ -108,26 +124,33 @@ public class RaftNode implements Node {
         context.taskExecutor().submit(
                 () -> context.rpcAdapter().replyRequestVote(
                     doProcessRequestVoteRpc(rpcMessage),
+                    // 找到发送消息的节点
                     context.group().getMember(rpcMessage.getSourceNodeId()).getEndpoint())
+
         );
     }
 
     private RequestVoteResult doProcessRequestVoteRpc(RequestVoteRpcMessage rpcMessage) {
 
         // reply current term if result's term is smaller than current one
+        // 如果对方term比自己小，则不投票并且返回自己的term给对象
         RequestVoteRpc rpc = rpcMessage.get();
         if (rpc.getTerm() < role.getTerm()) {
+            LOGGER.debug("term from rpc < current term, don't vote ({} <- {})",
+                        rpc.getTerm(), role.getTerm());
             return new RequestVoteResult(role.getTerm(), false);
         }
-
+        // 此处无条件投票
         boolean voteForCandidate = true;
 
         // step down if result's term is larger than current term
+        // 如果对象的term比自己大，则切换为follower角色
         if (rpc.getTerm() > role.getTerm()) {
             becomeFollower(rpc.getTerm(), (voteForCandidate ? rpc.getCandidateId() : null), null, true);
             return new RequestVoteResult(rpc.getTerm(), voteForCandidate);
         }
 
+        // 本地的term与消息的term一致
         switch (role.getName()) {
             case FOLLOWER:
                 FollowerNodeRole follower = (FollowerNodeRole) role;
@@ -158,42 +181,58 @@ public class RaftNode implements Node {
     private void doProcessRequestVoteResult(RequestVoteResult result) {
 
         // step down if result's term is larger than current term
+        // 如果对象的term比自己大，则退化为follower角色
         if (result.getTerm() > role.getTerm()) {
             becomeFollower(result.getTerm(), null, null, true);
             return;
         }
 
         // check role
+        // 如果自己不是Candidate角色，那么忽略
         if (role.getName() != RoleName.CANDIDATE) {
+            LOGGER.debug("reveive request vote result and current role is not candidate, ignore");
             return;
         }
 
+        // 如果对方的term比自己小或者对方没有投票给自己，则忽略
         if (result.getTerm() < role.getTerm() || !result.isVoteGranted()) {
             return;
         }
 
+        // 当前票数
         int currentVotesCount = ((CandidateNodeRole) role).getVotesCount() + 1;
+        // 节点数
         int countOfMajor = context.group().getCount();
+        LOGGER.debug("votes count {}, node count", currentVotesCount, countOfMajor);
+        // 取消选举超时定时器
         role.cancelTimeoutOrTask();
 
-        if (currentVotesCount > countOfMajor / 2) {
+        if (currentVotesCount > countOfMajor / 2) {  // 票数过半
             // become leader
+            LOGGER.debug("become leader, term {}", role.getTerm());
             changeToRole(new LeaderNodeRole(role.getTerm(), scheduleLogReplicationTask()));
 
 
         } else {
 
             // update votes count
+            // 票数没有达到一半
+            // 收到修改的投票数，并重新创建选举超时定时器
             changeToRole(new CandidateNodeRole(role.getTerm(), currentVotesCount, scheduleElectionTimeout()));
         }
     }
 
 
-    public void replicateLog() {
+    /**
+     * 发送心跳或者appendEntries
+     */
+    void replicateLog() {
+
         context.taskExecutor().submit(this::doReplicateLog);
     }
 
     private void doReplicateLog() {
+        LOGGER.debug("replicate log");
         for (GroupMember member : context.group().listReplicationTarget()) {
             doReplicateLog(member);
         }
@@ -202,11 +241,13 @@ public class RaftNode implements Node {
     private void doReplicateLog(GroupMember member) {
         AppendEntriesRpc rpc = new AppendEntriesRpc();
         // set appendEntries attributes
+
         rpc.setTerm(role.getTerm());
         rpc.setLeaderId(context.selfId());
         rpc.setPrevLogIndex(0);
         rpc.setPrevLogTerm(0);
         rpc.setLeaderCommit(0);
+
 
         context.rpcAdapter().sendAppendEntries(rpc, member.getEndpoint());
     }
@@ -215,19 +256,25 @@ public class RaftNode implements Node {
     @Subscribe
     public void onReceiveAppendEntriesRpc(AppendEntriesRpcMessage rpcMessage) {
         context.taskExecutor().submit(() ->
-                        context.rpcAdapter().replyAppendEntries(doProcessAppendEntriesRpc(rpcMessage), 
+
+                        context.rpcAdapter().replyAppendEntries(doProcessAppendEntriesRpc(rpcMessage),
+                                // 发送消息的节点
                         context.group().getMember(rpcMessage.getSourceNodeId()).getEndpoint()));
+
+
     }
 
     private AppendEntriesResult doProcessAppendEntriesRpc(AppendEntriesRpcMessage rpcMessage) {
         AppendEntriesRpc rpc = rpcMessage.get();
 
         // reply current term if term in rpc is smaller than current term
+        // 如果对方term比自己小，则回复自己的term
         if (rpc.getTerm() < role.getTerm()) {
             return new AppendEntriesResult(role.getTerm(), false);
         }
 
         // if term in rpc is larger than current term, step down and append entries
+        // 如果对方的term比自己大，则退化为Follower角色
         if (rpc.getTerm() > role.getTerm()) {
             becomeFollower(rpc.getTerm(), null, rpc.getLeaderId(), true);
             return new AppendEntriesResult(rpc.getTerm(), appendEntries(rpc));
@@ -238,15 +285,21 @@ public class RaftNode implements Node {
         switch (role.getName()) {
             case FOLLOWER:
                 // reset election timeout and append entries
+                // 设置leaderId并重置选举定时器
                 becomeFollower(rpc.getTerm(), ((FollowerNodeRole) role).getVotedFor(), rpc.getLeaderId(), true);
+                // 并且追加日志
                 return new AppendEntriesResult(rpc.getTerm(), appendEntries(rpc));
+
             case CANDIDATE:
 
                 // more than one candidate but another node won the election
                 becomeFollower(rpc.getTerm(), null, rpc.getLeaderId(), true);
                 return new AppendEntriesResult(rpc.getTerm(), appendEntries(rpc));
             case LEADER:
+                // Leader 收到AppendEntries消息，打印警告日志
+                LOGGER.debug("receive append entries rpc from another leader {}, ignore", rpc.getLeaderId());
                 return new AppendEntriesResult(rpc.getTerm(), false);
+
             default:
                 throw new IllegalStateException("unexpected node role [" + role.getName() + "]");
         }
@@ -269,6 +322,7 @@ public class RaftNode implements Node {
         AppendEntriesResult result = resultMessage.get();
 
         // step down if result's term is larger than current term
+        // 如果对方term比自己大，则退化为Follower角色
         if (result.getTerm() > role.getTerm()) {
             becomeFollower(result.getTerm(), null, null, true);
             return;
@@ -276,18 +330,24 @@ public class RaftNode implements Node {
 
         // check role
         if (role.getName() != RoleName.LEADER) {
+            LOGGER.debug("reveive append entries result from node {} but current node is not leader, ignore", resultMessage.getSourceNodeId());
             return;
         }
     }
 
     @Override
     public void stop() throws InterruptedException {
+        // 不允许没有启动时关闭
         if (!started) {
             throw new IllegalStateException("node not started");
         }
+        // 关闭定时器
         context.scheduler().stop();
+        // 关闭RPC连接器
         context.rpcAdapter().close();
+        //
         context.store().close();
+        // 关闭任务执行器
         context.taskExecutor().shutdown();
         started = false;
     }

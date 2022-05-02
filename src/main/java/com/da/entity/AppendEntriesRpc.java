@@ -4,11 +4,13 @@ import com.da.log.Entry;
 import com.da.node.NodeId;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 
 import java.util.List;
 
 @Setter
 @Getter
+@ToString
 public class AppendEntriesRpc {
 
     /** 当前的任期号 **/
