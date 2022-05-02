@@ -26,6 +26,10 @@ public class RaftNode implements Node {
     private boolean started;
     private volatile AbstractNodeRole role;
 
+    public AbstractNodeRole getRole() {
+        return role;
+    }
+
     RaftNode(NodeContext context) {
         this.context = context;
     }

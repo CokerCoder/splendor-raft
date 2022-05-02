@@ -16,7 +16,7 @@ public class NodeGroup {
     }
 
     //多节点构造
-    NodeGroup(Collection<NodeEndpoint> endpoints, NodeId selfId){
+    public NodeGroup(Collection<NodeEndpoint> endpoints, NodeId selfId){
         this.memberMap = buildMemberMap(endpoints);
         this.selfId = selfId;
     }
