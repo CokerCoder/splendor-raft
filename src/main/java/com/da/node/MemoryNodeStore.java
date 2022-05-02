@@ -1,5 +1,8 @@
 package com.da.node;
 
+/**
+ * 基于内存实现NodeStore接口
+ */
 public class MemoryNodeStore implements NodeStore {
 
     private int term;

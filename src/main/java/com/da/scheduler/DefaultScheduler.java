@@ -44,9 +44,12 @@ public class DefaultScheduler implements Scheduler {
 
     @Override
     public LogReplicationTask scheduleLogReplicationTask(Runnable task) {
+
         ScheduledFuture<?> scheduledFuture = 
             this.scheduledExecutorService.scheduleWithFixedDelay(
                 task, logReplicationDelay, logReplicationInterval, TimeUnit.MILLISECONDS);
+
+
         return new LogReplicationTask(scheduledFuture);
     }
 
