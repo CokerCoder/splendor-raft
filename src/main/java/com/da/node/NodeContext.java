@@ -53,7 +53,7 @@ public class NodeContext {
     public RPCAdapter rpcAdapter() {
         return rpcAdapter;
     }
-    
+
     public void setGroup(NodeGroup group) {
         this.group = group;
     }

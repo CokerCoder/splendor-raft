@@ -50,6 +50,7 @@ public class DefaultScheduler implements Scheduler {
                 task, logReplicationDelay, logReplicationInterval, TimeUnit.MILLISECONDS);
 
 
+
         return new LogReplicationTask(scheduledFuture);
     }
 

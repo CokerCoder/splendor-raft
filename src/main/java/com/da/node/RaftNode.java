@@ -30,6 +30,7 @@ public class RaftNode implements Node {
     private boolean started; //是否已经启动
     private volatile AbstractNodeRole role; // 当前的角色与信息
 
+
     public AbstractNodeRole getRole() {
         return role;
     }
@@ -222,7 +223,6 @@ public class RaftNode implements Node {
         }
     }
 
-
     /**
      * 发送心跳或者appendEntries
      */
@@ -242,12 +242,12 @@ public class RaftNode implements Node {
         AppendEntriesRpc rpc = new AppendEntriesRpc();
         // set appendEntries attributes
 
+
         rpc.setTerm(role.getTerm());
         rpc.setLeaderId(context.selfId());
         rpc.setPrevLogIndex(0);
         rpc.setPrevLogTerm(0);
         rpc.setLeaderCommit(0);
-
 
         context.rpcAdapter().sendAppendEntries(rpc, member.getEndpoint());
     }
@@ -260,7 +260,6 @@ public class RaftNode implements Node {
                         context.rpcAdapter().replyAppendEntries(doProcessAppendEntriesRpc(rpcMessage),
                                 // 发送消息的节点
                         context.group().getMember(rpcMessage.getSourceNodeId()).getEndpoint()));
-
 
     }
 
@@ -288,6 +287,7 @@ public class RaftNode implements Node {
                 // 设置leaderId并重置选举定时器
                 becomeFollower(rpc.getTerm(), ((FollowerNodeRole) role).getVotedFor(), rpc.getLeaderId(), true);
                 // 并且追加日志
+
                 return new AppendEntriesResult(rpc.getTerm(), appendEntries(rpc));
 
             case CANDIDATE:
@@ -298,6 +298,7 @@ public class RaftNode implements Node {
             case LEADER:
                 // Leader 收到AppendEntries消息，打印警告日志
                 LOGGER.debug("receive append entries rpc from another leader {}, ignore", rpc.getLeaderId());
+
                 return new AppendEntriesResult(rpc.getTerm(), false);
 
             default:
