@@ -63,4 +63,8 @@ public class NodeGroup {
         return endpoints;
     }
 
+    public int getCount() {
+        return memberMap.size();
+    }
+
 }

@@ -3,9 +3,11 @@ package com.da.entity;
 import com.da.log.LogEntry;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 
 @Setter
 @Getter
+@ToString
 public class AppendEntriesRpc {
 
     /** 当前的任期号 **/

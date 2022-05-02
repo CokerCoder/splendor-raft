@@ -13,8 +13,8 @@ public class DefaultScheduler implements Scheduler {
     private final int maxElectionTimeout;
     private final Random electionTimeoutRandom;
 
-    // private final int logReplicationDelay;
-    // private final int logReplicationInterval;
+    private final int logReplicationDelay;
+    private final int logReplicationInterval;
 
     private final ScheduledExecutorService scheduledExecutorService;
 
@@ -28,8 +28,8 @@ public class DefaultScheduler implements Scheduler {
         }
         this.minElectionTimeout = minElectionTimeout;
         this.maxElectionTimeout = maxElectionTimeout;
-        // this.logReplicationDelay = logReplicationDelay;
-        // this.logReplicationInterval = logReplicationInterval;
+        this.logReplicationDelay = logReplicationDelay;
+        this.logReplicationInterval = logReplicationInterval;
         electionTimeoutRandom = new Random();
         scheduledExecutorService = Executors.newSingleThreadScheduledExecutor(r -> new Thread(r, "scheduler"));
     }
@@ -42,10 +42,14 @@ public class DefaultScheduler implements Scheduler {
         return new ElectionTimeoutTask(scheduledFuture);
     }
 
-    // @Override
-    // public LogReplicationTask scheduleLogReplicationTask(Runnable task) {
-    //     // TODO: scheduleLogReplicationTask
-    // }
+    @Override
+    public LogReplicationTask scheduleLogReplicationTask(Runnable task) {
+        // TODO: scheduleLogReplicationTask
+        ScheduledFuture<?> scheduledFuture = this.scheduledExecutorService.scheduleWithFixedDelay(
+                task, logReplicationDelay, logReplicationInterval, TimeUnit.MILLISECONDS
+        );
+        return new LogReplicationTask(scheduledFuture);
+    }
 
     @Override
     public void stop() throws InterruptedException {
