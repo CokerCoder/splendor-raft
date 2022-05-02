@@ -11,6 +11,7 @@ public class AppendEntriesResult {
     /** 当前的任期号 */
     private int term; // 选举term
 
+
     public int getTerm() {
         return term;
     }
@@ -21,6 +22,7 @@ public class AppendEntriesResult {
     public boolean isSuccess() {
         return success;
     }
+
 
     public AppendEntriesResult(int term) {
         this.term = term;
@@ -35,21 +37,11 @@ public class AppendEntriesResult {
         this.success = success;
     }
 
-    // 获取term
-    public int getTerm() {
-        return term;
+    public static AppendEntriesResult fail() {
+        return new AppendEntriesResult(false);
     }
 
-    // 获取是否成功
-    public boolean isSuccess() {
-        return success;
+    public static AppendEntriesResult succeed() {
+        return new AppendEntriesResult(true);
     }
-
-//    public static AppendEntriesResult fail() {
-//        return new AppendEntriesResult(false);
-//    }
-//
-//    public static AppendEntriesResult succeed() {
-//        return new AppendEntriesResult(true);
-//    }
 }
