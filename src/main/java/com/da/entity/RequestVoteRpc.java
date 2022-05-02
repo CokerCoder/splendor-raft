@@ -6,7 +6,7 @@ public class RequestVoteRpc {
     
     private int term;
     private NodeId candidateId;
-    private int lastLongIndex;
+    private int lastLogIndex;
     private int lastLogTerm;
 
     // getter and setter
@@ -16,6 +16,22 @@ public class RequestVoteRpc {
 
     public NodeId getCandidateId() {
         return candidateId;
+    }
+
+    public void setTerm(int term) {
+        this.term = term;
+    }
+
+    public void setCandidateId(NodeId candidateId) {
+        this.candidateId = candidateId;
+    }
+
+    public void setLastLogIndex(int lastLogIndex) {
+        this.lastLogIndex = lastLogIndex;
+    }
+
+    public void setLastLogTerm(int lastLogTerm) {
+        this.lastLogTerm = lastLogTerm;
     }
     
 }

@@ -12,7 +12,10 @@ import com.da.node.roles.CandidateNodeRole;
 import com.da.node.roles.FollowerNodeRole;
 import com.da.node.roles.LeaderNodeRole;
 import com.da.node.roles.RoleName;
+import com.da.rpc.messages.AppendEntriesRpcMessage;
+import com.da.rpc.messages.RequestVoteRpcMessage;
 import com.da.scheduler.ElectionTimeoutTask;
+import com.da.scheduler.LogReplicationTask;
 import com.google.common.eventbus.Subscribe;
 
 
@@ -60,7 +63,12 @@ public class RaftNode implements Node {
         role.cancelTimeoutOrTask();
         changeToRole(new CandidateNodeRole(newTerm, scheduleElectionTimeout()));
 
-        // TODO: 发送RequestVoteRpc消息
+        RequestVoteRpc rpc = new RequestVoteRpc();
+        rpc.setTerm(newTerm);
+        rpc.setCandidateId(context.selfId());
+        rpc.setLastLogIndex(0);
+        rpc.setLastLogTerm(0);
+        context.rpcAdapter().sendRequestVote(rpc, context.group().listEndPointExceptSelf());
 
     }
 
@@ -86,16 +94,16 @@ public class RaftNode implements Node {
         return context.scheduler().scheduleElectionTimeoutTask(this::electionTimeout);
     }
 
-    // private LogReplicationTask scheduleLogReplicationTask() {
-    //     return context.scheduler().scheduleLogReplicationTask(this::replicateLog);
-    // 
+    private LogReplicationTask scheduleLogReplicationTask() {
+        return context.scheduler().scheduleLogReplicationTask(this::replicateLog);
+    }
 
     @Subscribe
     public void onReceiveRequestVoteRpc(RequestVoteRpcMessage rpcMessage) {
         context.taskExecutor().submit(
                 () -> context.rpcAdapter().replyRequestVote(
                     doProcessRequestVoteRpc(rpcMessage),
-                    context.findMember(rpcMessage.getSourceNodeId()).getEndPoint())
+                    context.group().getMember(rpcMessage.getSourceNodeId()).getEndpoint())
         );
     }
 
@@ -166,7 +174,8 @@ public class RaftNode implements Node {
         if (currentVotesCount > countOfMajor / 2) {
             // become leader
             changeToRole(new LeaderNodeRole(role.getTerm(), scheduleLogReplicationTask()));
-            context.rpcAdapter().resetChannels(); // close all inbound channels
+
+
         } else {
 
             // update votes count
@@ -188,7 +197,11 @@ public class RaftNode implements Node {
     private void doReplicateLog(GroupMember member) {
         AppendEntriesRpc rpc = new AppendEntriesRpc();
         // set appendEntries attributes
-        // TODO:
+        rpc.setTerm(role.getTerm());
+        rpc.setLeaderId(context.selfId());
+        rpc.setPrevLogIndex(0);
+        rpc.setPrevLogTerm(0);
+        rpc.setLeaderCommit(0);
 
         context.rpcAdapter().sendAppendEntries(rpc, member.getEndpoint());
     }

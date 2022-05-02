@@ -1,21 +1,12 @@
 package com.da.rpc;
 
-import com.da.entity.*;
-import com.da.node.Node;
-
-
-/**
- * The definition of the PRC service instance
- */
-public interface RPCAdapter {
-
 import java.util.Collection;
 
-import com.da.entity.AppendEntriesRpc;
-import com.da.entity.AppendEntriesResult;
-import com.da.entity.RequestVoteRpc;
-import com.da.entity.RequestVoteResult;
+import com.da.entity.*;
+import com.da.node.Node;
 import com.da.node.nodestatic.NodeEndpoint;
+
+
 
 // 最终RPC服务转换成的适配器接口，RPC service暂时没有实现
 // 该类相当于lu-raft里的RpcClient，但是把可以发送的request拆分成了具体的（下面四个）
@@ -27,7 +18,7 @@ public interface RPCAdapter {
 
     void replyRequestVote(RequestVoteResult result, NodeEndpoint destination);
 
-    void sendAppendEntries(AppendEntriesRpc request, Collection<NodeEndpoint> destinations);
+    void sendAppendEntries(AppendEntriesRpc request, NodeEndpoint destinations);
 
     void replyAppendEntries(AppendEntriesResult result, NodeEndpoint destination);
 

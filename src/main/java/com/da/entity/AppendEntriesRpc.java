@@ -29,5 +29,26 @@ public class AppendEntriesRpc {
 
     /** 领导人已经提交的日志的索引值  */
     private int leaderCommit;
+
+
+    public void setTerm(int term) {
+        this.term = term;
+    }
+
+    public void setLeaderId(NodeId leaderId) {
+        this.leaderId = leaderId;
+    }
+
+    public void setPrevLogIndex(int prevLogIndex) {
+        this.prevLogIndex = prevLogIndex;
+    }
+
+    public void setPrevLogTerm(int prevLogTerm) {
+        this.prevLogTerm = prevLogTerm;
+    }
+
+    public void setLeaderCommit(int leaderCommit) {
+        this.leaderCommit = leaderCommit;
+    }
     
 }
