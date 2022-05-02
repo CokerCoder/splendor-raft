@@ -1,6 +1,7 @@
 package com.da.rpc.messages;
 
 import com.da.node.NodeId;
+import com.da.rpc.Channel;
 
 public abstract class AbstractRpcMessage<T> {
 

@@ -12,6 +12,7 @@ import com.da.node.roles.CandidateNodeRole;
 import com.da.node.roles.FollowerNodeRole;
 import com.da.node.roles.LeaderNodeRole;
 import com.da.node.roles.RoleName;
+import com.da.rpc.messages.AppendEntriesResultMessage;
 import com.da.rpc.messages.AppendEntriesRpcMessage;
 import com.da.rpc.messages.RequestVoteRpcMessage;
 import com.da.scheduler.ElectionTimeoutTask;
@@ -211,7 +212,7 @@ public class RaftNode implements Node {
     public void onReceiveAppendEntriesRpc(AppendEntriesRpcMessage rpcMessage) {
         context.taskExecutor().submit(() ->
                         context.rpcAdapter().replyAppendEntries(doProcessAppendEntriesRpc(rpcMessage), 
-                        context.findMember(rpcMessage.getSourceNodeId()).getEndPoint()));
+                        context.group().getMember(rpcMessage.getSourceNodeId()).getEndpoint()));
     }
 
     private AppendEntriesResult doProcessAppendEntriesRpc(AppendEntriesRpcMessage rpcMessage) {
@@ -234,14 +235,14 @@ public class RaftNode implements Node {
             case FOLLOWER:
                 // reset election timeout and append entries
                 becomeFollower(rpc.getTerm(), ((FollowerNodeRole) role).getVotedFor(), rpc.getLeaderId(), true);
-                return new AppendEntriesResult(rpc.getMessageId(), rpc.getTerm(), appendEntries(rpc));
+                return new AppendEntriesResult(rpc.getTerm(), appendEntries(rpc));
             case CANDIDATE:
 
                 // more than one candidate but another node won the election
                 becomeFollower(rpc.getTerm(), null, rpc.getLeaderId(), true);
-                return new AppendEntriesResult(rpc.getMessageId(), rpc.getTerm(), appendEntries(rpc));
+                return new AppendEntriesResult(rpc.getTerm(), appendEntries(rpc));
             case LEADER:
-                return new AppendEntriesResult(rpc.getMessageId(), rpc.getTerm(), false);
+                return new AppendEntriesResult(rpc.getTerm(), false);
             default:
                 throw new IllegalStateException("unexpected node role [" + role.getName() + "]");
         }
@@ -254,11 +255,6 @@ public class RaftNode implements Node {
     }
 
 
-    /**
-     * Receive append entries result.
-     *
-     * @param resultMessage result message
-     */
     @Subscribe
     public void onReceiveAppendEntriesResult(AppendEntriesResultMessage resultMessage) {
         context.taskExecutor().submit(() -> doProcessAppendEntriesResult(resultMessage));

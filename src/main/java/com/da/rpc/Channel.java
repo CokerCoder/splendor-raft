@@ -1,4 +1,4 @@
-package com.da.rpc.messages;
+package com.da.rpc;
 
 import com.da.entity.AppendEntriesResult;
 import com.da.entity.AppendEntriesRpc;
