@@ -2,6 +2,7 @@ package com.da.node.nodestatic;
 
 import com.da.node.NodeId;
 
+import javax.annotation.Nonnull;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -67,4 +68,53 @@ public class NodeGroup {
         return memberMap.size();
     }
 
+    int getMatchIndexOfMajor() {
+        List<NodeMatchIndex> matchIndices = new ArrayList<>();
+        for (GroupMember member : memberMap.values()) {
+            if (!member.idEquals(selfId)) {
+                matchIndices.add(new NodeMatchIndex(member.getId(), member.getMatchIndex()));
+            }
+        }
+        int count = matchIndices.size();
+        // 没有节点的情况
+        if (count == 0) {
+            throw new IllegalStateException("standalone or no major node");
+        }
+        Collections.sort(matchIndices);
+        logger.debug("match indices {}", matchIndices);
+        // 取排序后的中间位置的matchIndex
+        return matchIndices.get(count / 2).getMatchIndex();
+    }
+
+
+    /**
+     * Node match index.
+     *
+     * @see NodeGroup#getMatchIndexOfMajor()
+     */
+    private static class NodeMatchIndex implements Comparable<NodeMatchIndex> {
+
+        private final NodeId nodeId;
+        private final int matchIndex;
+
+        NodeMatchIndex(NodeId nodeId, int matchIndex) {
+            this.nodeId = nodeId;
+            this.matchIndex = matchIndex;
+        }
+
+        int getMatchIndex() {
+            return matchIndex;
+        }
+
+        @Override
+        public int compareTo(@Nonnull NodeMatchIndex o) {
+            return -Integer.compare(o.matchIndex, this.matchIndex);
+        }
+
+        @Override
+        public String toString() {
+            return "<" + nodeId + ", " + matchIndex + ">";
+        }
+
+    }
 }

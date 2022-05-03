@@ -6,6 +6,7 @@ import com.da.entity.AppendEntriesResult;
 import com.da.entity.AppendEntriesRpc;
 import com.da.entity.RequestVoteResult;
 import com.da.entity.RequestVoteRpc;
+import com.da.log.EntryMeta;
 import com.da.node.nodestatic.GroupMember;
 import com.da.node.roles.AbstractNodeRole;
 import com.da.node.roles.CandidateNodeRole;
@@ -30,7 +31,7 @@ public class RaftNode implements Node {
     private boolean started; //是否已经启动
     private volatile AbstractNodeRole role; // 当前的角色与信息
 
-
+    // 获取当前角色
     public AbstractNodeRole getRole() {
         return role;
     }
@@ -39,6 +40,7 @@ public class RaftNode implements Node {
         this.context = context;
     }
 
+    // 获取核心组件上下文
     public NodeContext getContext() {
         return context;
     }
@@ -81,6 +83,8 @@ public class RaftNode implements Node {
         LOGGER.debug("start election");
         // 变成candidate 角色
         changeToRole(new CandidateNodeRole(newTerm, scheduleElectionTimeout()));
+
+        EntryMeta lastEntryMeta = context.log().getLastEntryMeta();
 
         RequestVoteRpc rpc = new RequestVoteRpc();
         rpc.setTerm(newTerm);
@@ -142,7 +146,7 @@ public class RaftNode implements Node {
             return new RequestVoteResult(role.getTerm(), false);
         }
         // 此处无条件投票
-        boolean voteForCandidate = true;
+        boolean voteForCandidate = !context.log().isNewerThan(rpc.getLastLogIndex(), rpc.getLastLogTerm());
 
         // step down if result's term is larger than current term
         // 如果对象的term比自己大，则切换为follower角色
@@ -238,16 +242,10 @@ public class RaftNode implements Node {
         }
     }
 
-    private void doReplicateLog(GroupMember member) {
-        AppendEntriesRpc rpc = new AppendEntriesRpc();
+    private void doReplicateLog(GroupMember member, int maxEntries) {
+        // AppendEntriesRpc rpc = new AppendEntriesRpc();
         // set appendEntries attributes
-
-
-        rpc.setTerm(role.getTerm());
-        rpc.setLeaderId(context.selfId());
-        rpc.setPrevLogIndex(0);
-        rpc.setPrevLogTerm(0);
-        rpc.setLeaderCommit(0);
+        AppendEntriesRpc rpc = context.log().createAppendEntriesRpc(role.getTerm(), context.selfId(), member.getNextIndex(), maxEntries);
 
         context.rpcAdapter().sendAppendEntries(rpc, member.getEndpoint());
     }
@@ -309,7 +307,14 @@ public class RaftNode implements Node {
 
     // TODO:
     private boolean appendEntries(AppendEntriesRpc rpc) {
-        return true;
+        boolean result = context.log().appendEntriesFromLeader(rpc.getPrevLogIndex()
+        rpc.getPrevLogTerm(), rpc.getEntries());
+
+        if (result) {
+            context.log().advanceCommitIndex(
+                    Math.min(rpc.getLeaderCommit(), rpc.getLastEntryIndex()),  rpc.getTerm());
+        }
+        return result;
     }
 
 
@@ -333,6 +338,30 @@ public class RaftNode implements Node {
         if (role.getName() != RoleName.LEADER) {
             LOGGER.debug("reveive append entries result from node {} but current node is not leader, ignore", resultMessage.getSourceNodeId());
             return;
+        }
+
+        NodeId sourceNodeId = resultMessage.getSourceNodeId();
+        GroupMember member = context.group().getMember(sourceNodeId);
+        // 没有指定的成员
+        if (member == null) {
+            logger.info("unexpected append entries result from node {}, node maybe removed", sourceNodeId);
+            return;
+        }
+        AppendEntriesRpc rpc = resultMessage.getRpc();
+        if (result.isSuccess()) {
+            // 回复成功
+            // 推进matchIndex和nextIndex
+            if (member.advanceReplicatingState(rpc.getLastEntrylndex())) {
+                // 推进本地的commitIndex
+                context.log().advanceCommitIndex(
+                        context.group().getMatchIndexOfMajor(), role.getTerm());
+                )
+            } else {
+                // 对方回复失败
+                if (!member.backoffNextIndex()) {
+                    logger.warn("cannot back off next index more, node {}", sourceNodeId);
+                }
+            }
         }
     }
 

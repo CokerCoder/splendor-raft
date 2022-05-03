@@ -40,7 +40,7 @@ public class GroupMember {
         return replicatingState;
     }
 
-    int getNextIndex(){ return ensureReplicatingState().getNextIndex(); }
+    public int getNextIndex(){ return ensureReplicatingState().getNextIndex(); }
 
     int getMatchIndex(){return ensureReplicatingState().getMatchIndex();}
 

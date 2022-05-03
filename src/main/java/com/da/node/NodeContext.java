@@ -1,5 +1,6 @@
 package com.da.node;
 
+import com.da.log.Log;
 import com.google.common.eventbus.EventBus;
 
 import com.da.executor.TaskExecutor;
@@ -15,7 +16,7 @@ public class NodeContext {
 
     private NodeId selfId; // 当前节点ID
     private NodeGroup group; // 当前组的成员列表
-    
+    private Log log;
     private RPCAdapter rpcAdapter; // RPC组件
     private Scheduler scheduler; // 定时器组件
     private EventBus eventBus;
@@ -78,5 +79,12 @@ public class NodeContext {
         this.store = store;
     }
 
+    public Log log() {
+        return log;
+    }
+
+    public void setLog(Log log) {
+        this.log = log;
+    }
 
 }
