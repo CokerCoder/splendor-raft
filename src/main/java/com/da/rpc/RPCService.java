@@ -1,7 +1,8 @@
 package com.da.rpc;
 
 import com.da.entity.*;
-import com.da.node.Node;
+import com.da.node.RaftNode;
+import com.da.node.nodestatic.NodeEndpoint;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -11,15 +12,15 @@ import java.util.Map;
  * A main toolkit of RPC for a node. All RPCs should be processed via this class.
  * 构造函数传入的node类型待定
  */
-public class RPCService implements RPCAdapter{
+public class RPCService implements RPCAdapter {
 
     private RPCServer server;
-//    private Map<Node, RPCClient> remotes;
-    private Node node; // TODO may change
+    private Map<NodeEndpoint, RPCClient> remotes;
+    private RaftNode node;
 
-    public RPCService(Node node) {
+    public RPCService(RaftNode node) {
         this.node = node;
-//        remotes = new HashMap<>();
+        remotes = new HashMap<>();
     }
 
     @Override
@@ -28,35 +29,37 @@ public class RPCService implements RPCAdapter{
         try {
             server.start();
         } catch (IOException e) {
-            // TODO
+
         }
     }
 
     @Override
-    public RequestVoteResult requestVoteRPC(RequestVoteRpc request, Node destination) {
-//        if (!remotes.containsKey(xxx)) { // TODO
-//            RPCClient client = new RPCClient("xx.x.xx.xx:xx");
-//            remotes.put(xxx, client);
-//        }
-//        RequestVoteResult result = remotes.get(xxx).requestVoteRPC(request);
-        return null;
+    public RequestVoteResult requestVoteRPC(RequestVoteRpc request, NodeEndpoint destination) {
+        if (!remotes.containsKey(destination)) { 
+            RPCClient client = new RPCClient(destination.getAddress().toString());
+            remotes.put(destination, client);
+        }
+        RequestVoteResult result = remotes.get(destination).requestVoteRPC(request);
+        return result;
     }
 
 
     @Override
-    public AppendEntriesResult appendEntriesRPC(AppendEntriesRpc request, Node destination) {
-//        if (!remotes.containsKey(xxx)) { // TODO
-//            ...
-//        }
-//        AppendEntriesResult result = remotes.get(xxx).appendEntriesRPC(request);
-        return null;
+    public AppendEntriesResult appendEntriesRPC(AppendEntriesRpc request, NodeEndpoint destination) {
+        if (!remotes.containsKey(destination)) {
+            RPCClient client = new RPCClient(destination.getAddress().toString());
+            remotes.put(destination, client);
+        }
+        AppendEntriesResult result = remotes.get(destination).appendEntriesRPC(request);
+        return result;
     }
 
     @Override
     public void close() {
-//        for (RPCClient client : remotes.values()) { // TODO
-//            client.close();
-//        }
+        for (RPCClient client : remotes.values()) {
+            client.close();
+        }
         server.close();
     }
+
 }

@@ -12,40 +12,31 @@ import com.da.node.nodestatic.NodeEndpoint;
 // 该类相当于lu-raft里的RpcClient，但是把可以发送的request拆分成了具体的（下面四个）
 public interface RPCAdapter {
     
-    void initialize();
+    // using blocking calls
 
-    void sendRequestVote(RequestVoteRpc request, Collection<NodeEndpoint> destinations);
+    /**
+     * Start a RPC server listening to port
+     * @param port The port is monitored by the node
+     */
+    void listen(int port);
 
-    void replyRequestVote(RequestVoteResult result, NodeEndpoint destination);
+    /**
+     * Send request vote message to the other node
+     * @param request The request information
+     * @param destination The target node
+     * @return The rpc result
+     *  destination 类型待定（需要address和port)
+     *  RPC 需调用 Node的 XXXResult handleXXX(XXXRpc)
+     */
+    RequestVoteResult requestVoteRPC(RequestVoteRpc request, NodeEndpoint destination);
 
-    void sendAppendEntries(AppendEntriesRpc request, NodeEndpoint destinations);
-
-    void replyAppendEntries(AppendEntriesResult result, NodeEndpoint destination);
-
-
-    // /**
-    //  * Start a RPC server listening to port
-    //  * @param port The port is monitored by the node
-    //  */
-    // void listen(int port);
-
-    // /**
-    //  * Send request vote message to the other node
-    //  * @param request The request information
-    //  * @param destination The target node
-    //  * @return The rpc result
-    //  *  destination 类型待定（需要address和port)
-    //  *  RPC 需调用 Node的 XXXResult handleXXX(XXXRpc)
-    //  */
-    // RequestVoteResult requestVoteRPC(RequestVoteRpc request, Node destination);
-
-    // /**
-    //  * Send append entries message to the other node
-    //  * @param request The request information
-    //  * @param destination The target node
-    //  * @return The rpc result
-    //  */
-    // AppendEntriesResult appendEntriesRPC(AppendEntriesRpc request, Node destination);
+    /**
+     * Send append entries message to the other node
+     * @param request The request information
+     * @param destination The target node
+     * @return The rpc result
+     */
+    AppendEntriesResult appendEntriesRPC(AppendEntriesRpc request, NodeEndpoint destination);
 
     // /**
     //  * Close all connection to other nodes and stop listening

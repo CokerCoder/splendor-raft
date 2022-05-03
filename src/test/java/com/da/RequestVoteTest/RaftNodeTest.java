@@ -18,9 +18,6 @@ import com.da.node.roles.CandidateNodeRole;
 import com.da.node.roles.FollowerNodeRole;
 import com.da.node.roles.LeaderNodeRole;
 import com.da.rpc.MockRPCAdapter;
-import com.da.rpc.messages.AppendEntriesResultMessage;
-import com.da.rpc.messages.AppendEntriesRpcMessage;
-import com.da.rpc.messages.RequestVoteRpcMessage;
 import com.da.scheduler.NullScheduler;
 
 import org.junit.Assert;
@@ -110,12 +107,8 @@ public class RaftNodeTest {
         rpc.setLastLogTerm(0);
 
         // 处理来自C的请求
-        node.onReceiveRequestVoteRpc(new RequestVoteRpcMessage(rpc, NodeId.of("C")));
+        RequestVoteResult result = node.onReceiveRequestVoteRpc(rpc);
         
-        MockRPCAdapter mockRPCAdapter = (MockRPCAdapter) node.getContext().rpcAdapter();
-        // 从rpc adaptor中拿到处理后的response
-        RequestVoteResult result = (RequestVoteResult) mockRPCAdapter.getResult();
-
         // 核对信息
         Assert.assertEquals(1, result.getTerm());
         Assert.assertTrue(result.isVoteGranted());
@@ -172,12 +165,11 @@ public class RaftNodeTest {
 
         MockRPCAdapter mockRPCAdapter = (MockRPCAdapter) node.getContext().rpcAdapter();
 
-        // there should be a total of three messages sent
-        // A sent to all peers including itself
-        Assert.assertEquals(3, mockRPCAdapter.getMessageCount());
+        // there should be a total of three messages sent (2 requestVote + 2 appendEntries)
+        Assert.assertEquals(4, mockRPCAdapter.getMessageCount());
 
         List<MockRPCAdapter.Message> messages = mockRPCAdapter.getMessages();
-        Set<NodeId> destinationNodeIds = messages.subList(1, 3).stream()
+        Set<NodeId> destinationNodeIds = messages.subList(2, 4).stream()
             .map(MockRPCAdapter.Message::getDestinationNodeId)
             .collect(Collectors.toSet());
         // check if received from both B and C
@@ -210,13 +202,10 @@ public class RaftNodeTest {
         rpc.setTerm(1);
         rpc.setLeaderId(NodeId.of("B"));
 
-        node.onReceiveAppendEntriesRpc(new AppendEntriesRpcMessage(rpc, NodeId.of("B")));
+        AppendEntriesResult result = node.onReceiveAppendEntriesRpc(rpc);
 
-        MockRPCAdapter mockRPCAdapter = (MockRPCAdapter) node.getContext().rpcAdapter();
-        AppendEntriesResult appendEntriesResult = (AppendEntriesResult) mockRPCAdapter.getResult();
-
-        Assert.assertEquals(1, appendEntriesResult.getTerm());
-        Assert.assertTrue(appendEntriesResult.isSuccess());
+        Assert.assertEquals(1, result.getTerm());
+        Assert.assertTrue(result.isSuccess());
 
         // should still be a follower
         Assert.assertTrue(node.getRole() instanceof FollowerNodeRole);
@@ -246,8 +235,7 @@ public class RaftNodeTest {
         Assert.assertTrue(node.getRole() instanceof LeaderNodeRole);
 
         node.replicateLog();
-        node.onReceiveAppendEntriesResult(new AppendEntriesResultMessage(
-            new AppendEntriesResult(1, true), NodeId.of("B"), new AppendEntriesRpc()));
+        node.onReceiveAppendEntriesResult(new AppendEntriesResult(1, true));
     }
     
 

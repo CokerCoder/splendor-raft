@@ -1,10 +1,18 @@
 package com.da.rpc;
 
 import com.da.entity.*;
-import com.da.node.Node;
+import com.da.node.NodeId;
+import com.da.node.RaftNode;
+
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import io.grpc.stub.StreamObserver;
+
+import com.da.rpc.proto.AppendEntriesReply;
+import com.da.rpc.proto.AppendEntriesRequest;
+import com.da.rpc.proto.RaftGrpc;
+import com.da.rpc.proto.RequestVoteReply;
+import com.da.rpc.proto.RequestVoteRequest;
 
 import java.io.IOException;
 
@@ -15,9 +23,8 @@ class RPCServer {
 
     private Server server;
 
-    public RPCServer(int port, Node node) {
+    public RPCServer(int port, RaftNode node) {
         server = ServerBuilder.forPort(port).addService(new RaftService(node)).build();
-
     }
 
     public void start() throws IOException {
@@ -35,33 +42,52 @@ class RPCServer {
      */
     private static class RaftService extends RaftGrpc.RaftImplBase {
 
-        private final Node node;
+        private final RaftNode node;
         private final RequestVoteReply.Builder RVRbuilder = RequestVoteReply.newBuilder();
         private final AppendEntriesReply.Builder AERbuilder = AppendEntriesReply.newBuilder();
 
-        public RaftService(Node node) {
+        public RaftService(RaftNode node) {
             this.node = node;
         }
 
         @Override
         public void requestVote(RequestVoteRequest request, StreamObserver<RequestVoteReply> responseObserver) {
-            RequestVoteRpc r = null; // TODO new RequestVoteRpc(); r.XXX = request.XXX;
-            RequestVoteResult result = node.handleRequestVote(r);
-            RequestVoteReply reply = RVRbuilder.setTerm(result.getTerm())
-                    .setVoteGranted(result.isVoteGranted())
-                    .build();
+            
+            RequestVoteRpc rpc = new RequestVoteRpc();
+            rpc.setTerm(request.getTerm());
+            rpc.setCandidateId(NodeId.of(request.getCandidateId()));
+            rpc.setLastLogTerm(request.getLastLogTerm());
+            rpc.setLastLogIndex(request.getLastLogIndex());
+
+            RequestVoteResult result = node.onReceiveRequestVoteRpc(rpc);
+
+            RequestVoteReply reply = RVRbuilder
+                .setTerm(result.getTerm())
+                .setVoteGranted(result.isVoteGranted())
+                .build();
+
             responseObserver.onNext(reply);
             responseObserver.onCompleted();
         }
 
         @Override
         public void appendEntries(AppendEntriesRequest request, StreamObserver<AppendEntriesReply> responseObserver) {
-            AppendEntriesRpc r = null; // TODO new AppendEntriesRpc(); r.XXX = request.XXX;
-            AppendEntriesResult result =  node.handleAppendEntries(r);
-//            AppendEntriesReply reply = AERbuilder.setTerm()
-//                    .setSuccess()
-//                    .build();
-//            responseObserver.onNext(reply);
+            
+            AppendEntriesRpc rpc = new AppendEntriesRpc();
+            rpc.setTerm(request.getTerm());
+            rpc.setPrevLogTerm(request.getPrevLogTerm());
+            rpc.setPrevLogIndex(request.getPrevLogIndex());
+            rpc.setLeaderId(NodeId.of(request.getLeaderId()));
+            rpc.setLeaderCommit(request.getLeaderCommit());
+
+            AppendEntriesResult result =  node.onReceiveAppendEntriesRpc(rpc);
+
+            AppendEntriesReply reply = AERbuilder
+                .setTerm(result.getTerm())
+                .setSuccess(result.isSuccess())
+                .build();
+
+            responseObserver.onNext(reply);
             responseObserver.onCompleted();
         }
     }

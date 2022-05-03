@@ -1,7 +1,6 @@
 package com.da.rpc;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -11,8 +10,6 @@ import com.da.entity.RequestVoteResult;
 import com.da.entity.RequestVoteRpc;
 import com.da.node.NodeId;
 import com.da.node.nodestatic.NodeEndpoint;
-import com.da.rpc.messages.AppendEntriesRpcMessage;
-import com.da.rpc.messages.RequestVoteRpcMessage;
 
 /**
  * For testing purpose
@@ -20,37 +17,6 @@ import com.da.rpc.messages.RequestVoteRpcMessage;
 public class MockRPCAdapter implements RPCAdapter {
 
     private LinkedList<Message> messages = new LinkedList<>();
-
-    @Override
-    public void sendRequestVote(RequestVoteRpc rpc, Collection<NodeEndpoint> destinationEndpoints) {
-        Message m = new Message();
-        m.rpc = rpc;
-        messages.add(m);
-    }
-
-    @Override
-    public void replyRequestVote(RequestVoteResult result, NodeEndpoint destinationEndpoint) {
-        Message m = new Message();
-        m.result = result;
-        m.destinationNodeId = destinationEndpoint.getId();
-        messages.add(m);
-    }
-
-    @Override
-    public void sendAppendEntries(AppendEntriesRpc rpc, NodeEndpoint destinationEndpoint) {
-        Message m = new Message();
-        m.rpc = rpc;
-        m.destinationNodeId = destinationEndpoint.getId();
-        messages.add(m);
-    }
-
-    @Override
-    public void replyAppendEntries(AppendEntriesResult result, NodeEndpoint destinationEndpoint) {
-        Message m = new Message();
-        m.result = result;
-        m.destinationNodeId = destinationEndpoint.getId();
-        messages.add(m);
-    }
 
     public Message getLastMessage() {
         return messages.isEmpty() ? null : messages.getLast();
@@ -114,12 +80,29 @@ public class MockRPCAdapter implements RPCAdapter {
     }
 
     @Override
-    public void initialize() {
+    public void close() {
         
     }
 
     @Override
-    public void close() {
+    public RequestVoteResult requestVoteRPC(RequestVoteRpc request, NodeEndpoint destination) {
+        Message m = new Message();
+        m.rpc = request;
+        messages.add(m);
+        return null;
+    }
+
+    @Override
+    public AppendEntriesResult appendEntriesRPC(AppendEntriesRpc request, NodeEndpoint destination) {
+        Message m = new Message();
+        m.rpc = request;
+        messages.add(m);
+        m.destinationNodeId = destination.getId();
+        return null;
+    }
+
+    @Override
+    public void listen(int port) {
         
     }
 

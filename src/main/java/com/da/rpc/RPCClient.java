@@ -1,6 +1,12 @@
 package com.da.rpc;
 
 import com.da.entity.*;
+import com.da.rpc.proto.AppendEntriesReply;
+import com.da.rpc.proto.AppendEntriesRequest;
+import com.da.rpc.proto.RaftGrpc;
+import com.da.rpc.proto.RequestVoteReply;
+import com.da.rpc.proto.RequestVoteRequest;
+
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 
@@ -11,7 +17,9 @@ class RPCClient {
 
     private final RaftGrpc.RaftBlockingStub blockingStub;
     private final ManagedChannel channel;
+    
     private final String target;
+
     private final RequestVoteRequest.Builder RVRBuilder = RequestVoteRequest.newBuilder();
     private final AppendEntriesRequest.Builder AERbuilder = AppendEntriesRequest.newBuilder();
 
@@ -22,28 +30,26 @@ class RPCClient {
     }
 
     public RequestVoteResult requestVoteRPC(RequestVoteRpc request) {
-        // TODO wait for completed RequestVoteRpc
-//        RequestVoteRequest rpcRequest = RVRBuilder.setTerm()
-//                .setCandidateId()
-//                .setLastLogIndex()
-//                .setLastLogIndex()
-//                .build();
-//        RequestVoteReply reply = blockingStub.requestVote(rpcRequest);
-//        return new RequestVoteResult(reply.getTerm(), reply.getVoteGranted());
-        return null;
+        RequestVoteRequest rpcRequest = RVRBuilder
+            .setTerm(request.getTerm())
+            .setCandidateId(request.getCandidateId().toString())
+            .setLastLogIndex(request.getLastLogIndex())
+            .setLastLogTerm(request.getLastLogTerm())
+            .build();
+       RequestVoteReply reply = blockingStub.requestVote(rpcRequest);
+       return new RequestVoteResult(reply.getTerm(), reply.getVoteGranted());
     }
 
     public AppendEntriesResult appendEntriesRPC(AppendEntriesRpc request) {
-        // TODO wait for completed AppendEntriesRpc
-//        AppendEntriesRequest rpcRequest = AERbuilder.setTerm()
-//                .setLeaderId()
-//                .setPrevLogIndex()
-//                .setPrevLogTerm()
-//                .setLeaderCommit()
-//                .build();
-//        AppendEntriesReply reply = blockingStub.appendEntries(rpcRequest);
-//        return new AppendEntriesResult();
-        return null;
+        AppendEntriesRequest rpcRequest = AERbuilder
+            .setTerm(request.getTerm())
+            .setLeaderId(request.getLeaderId().toString())
+            .setPrevLogIndex(request.getPrevLogIndex())
+            .setPrevLogTerm(request.getPrevLogTerm())
+            .setLeaderCommit(request.getLeaderCommit())
+            .build();
+       AppendEntriesReply reply = blockingStub.appendEntries(rpcRequest);
+       return new AppendEntriesResult(reply.getTerm(), reply.getSuccess());
     }
 
     public void close() {

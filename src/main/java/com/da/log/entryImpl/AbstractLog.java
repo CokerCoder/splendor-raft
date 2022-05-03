@@ -47,7 +47,7 @@ public abstract class AbstractLog implements Log {
         if(!entrySequence.isEmpty()){
             int maxIndex = (maxEntries==ALL_ENTRIES?
                             nextLogIndex:Math.min(nextLogIndex, nextIndex+maxEntries));
-            rpc.setEntries(entrySequence.subList(nextIndex, maxIndex));
+            // rpc.setEntries(entrySequence.subList(nextIndex, maxIndex));
         }
         return rpc;
     }
