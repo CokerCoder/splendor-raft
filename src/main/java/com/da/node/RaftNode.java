@@ -31,10 +31,12 @@ public class RaftNode implements Node {
     private boolean started; //是否已经启动
     private volatile AbstractNodeRole role; // 当前的角色与信息
 
+
     // 获取当前角色
     public AbstractNodeRole getRole() {
         return role;
     }
+
 
     RaftNode(NodeContext context) {
         this.context = context;
@@ -132,6 +134,7 @@ public class RaftNode implements Node {
                     // 找到发送消息的节点
                     context.group().getMember(rpcMessage.getSourceNodeId()).getEndpoint())
 
+
         );
     }
 
@@ -145,8 +148,9 @@ public class RaftNode implements Node {
                         rpc.getTerm(), role.getTerm());
             return new RequestVoteResult(role.getTerm(), false);
         }
-        // 此处无条件投票
+
         boolean voteForCandidate = !context.log().isNewerThan(rpc.getLastLogIndex(), rpc.getLastLogTerm());
+
 
         // step down if result's term is larger than current term
         // 如果对象的term比自己大，则切换为follower角色

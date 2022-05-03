@@ -37,11 +37,11 @@ public class AppendEntriesResult {
         this.success = success;
     }
 
-    public static AppendEntriesResult fail() {
-        return new AppendEntriesResult(false);
-    }
-
-    public static AppendEntriesResult succeed() {
-        return new AppendEntriesResult(true);
-    }
+//    public static AppendEntriesResult fail() {
+//        return new AppendEntriesResult(false);
+//    }
+//
+//    public static AppendEntriesResult succeed() {
+//        return new AppendEntriesResult(true);
+//    }
 }

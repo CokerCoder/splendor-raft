@@ -14,7 +14,6 @@ public interface TaskExecutor {
      */
     Future<?> submit(Runnable task);
 
-
     /**
      * 提交任务，任务有返回值
      * @param task
@@ -22,7 +21,6 @@ public interface TaskExecutor {
      * @return
      */
     <V> Future<V> submit(Callable<V> task);
-
 
     /**
      * 关闭任务执行器

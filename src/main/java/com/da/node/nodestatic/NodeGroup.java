@@ -68,6 +68,7 @@ public class NodeGroup {
         return memberMap.size();
     }
 
+
     int getMatchIndexOfMajor() {
         List<NodeMatchIndex> matchIndices = new ArrayList<>();
         for (GroupMember member : memberMap.values()) {
@@ -117,4 +118,5 @@ public class NodeGroup {
         }
 
     }
+
 }
