@@ -178,6 +178,7 @@ public abstract class AbstractLog implements Log {
     private int findFirstUnmatchedLog(EntrySequenceView leaderEntries) {
         int logIndex;
         EntryMeta followerEntryMeta;
+        // 从后往前遍历leaderEntries
         for(Entry leadeEntry: leaderEntries){
             logIndex = leadeEntry.getIndex();
             //按照索引查找日志条目元信息
