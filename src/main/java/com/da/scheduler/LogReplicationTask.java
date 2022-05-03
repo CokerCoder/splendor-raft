@@ -7,7 +7,7 @@ import java.util.concurrent.TimeUnit;
 public class LogReplicationTask {
 
     private final ScheduledFuture<?> scheduledFuture;
-    
+
     public static final LogReplicationTask NONE = new LogReplicationTask(new NullScheduledFuture());
 
     public LogReplicationTask(ScheduledFuture<?> scheduledFuture) {
