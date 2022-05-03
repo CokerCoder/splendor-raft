@@ -9,11 +9,11 @@ import java.io.IOException;
 public class EntriesFile {
     private final SeekableFile seekableFile;
 
-    //普通文件
+    //构造函数，普通文件
     public EntriesFile(File file) throws FileNotFoundException{
         this(new RandomAccessFileAdapter(file));
     }
-
+    //构造函数, SeekableFile
     public EntriesFile(SeekableFile seekableFile){
         this.seekableFile = seekableFile;
     }
@@ -49,7 +49,7 @@ public class EntriesFile {
     public long size() throws IOException{
         return seekableFile.size();
     }
-
+    // 消除所有内容
     public void clear() throws IOException{
         truncate(0L);
     }

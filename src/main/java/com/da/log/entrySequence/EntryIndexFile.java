@@ -23,12 +23,13 @@ public class EntryIndexFile implements Iterable<EntryIndexItem>{
     public EntryIndexFile(File file) throws IOException{
         this(new RandomAccessFileAdapter(file));
     }
-
+    //构造函数-SeekableFile
     public EntryIndexFile(SeekableFile seekableFile) throws  IOException{
         this.seekableFile = seekableFile;
         load();
     }
 
+    // 加载所有日志元信息
     private void load() throws IOException{
         if(seekableFile.size()==0L){
             entryIndexCount=0;
@@ -48,7 +49,7 @@ public class EntryIndexFile implements Iterable<EntryIndexItem>{
             entryIndexMap.put(i, new EntryIndexItem(i,offset,kind,term));
         }
     }
-
+    // 更新日志条目数量
     private void updateEntryIndexCount(){
         entryIndexCount = maxEntryIndex-minEntryIndex +1;
     }
@@ -56,16 +57,19 @@ public class EntryIndexFile implements Iterable<EntryIndexItem>{
     //追加日志条目元信息
     public void appenEntryIndex(int index, long offset,int kind, int term) throws IOException{
         if(seekableFile.size()==0L){
+            // 如果文件为空，则写入minEntryIndex
             seekableFile.writeInt(index);
             minEntryIndex = index;
         }else{
+            // 索引检查
             if(index!=maxEntryIndex+1){
                 throw new IllegalArgumentException(
                         "index mush be "+ (maxEntryIndex+1)+ " but was "+index
                 );
             }
-            seekableFile.seek(OFFSET_MAX_ENTRY_INDEX);
+            seekableFile.seek(OFFSET_MAX_ENTRY_INDEX); // 跳过 minEntrylndex
         }
+        // 写入 maxEntryIndex
         seekableFile.writeInt(index);
         maxEntryIndex = index;
         updateEntryIndexCount();
@@ -77,6 +81,7 @@ public class EntryIndexFile implements Iterable<EntryIndexItem>{
         entryIndexMap.put(index, new EntryIndexItem(index, offset, kind, term));
     }
 
+    //获取指定索引的日志的偏移
     private long getOffsetOfEntryIndexItem(int index){
         return (index-minEntryIndex)*LENGTH_ENTRY_INDEX_ITEM + Integer.BYTES*2;
     }
