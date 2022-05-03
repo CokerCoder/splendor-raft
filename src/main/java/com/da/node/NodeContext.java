@@ -74,4 +74,8 @@ public class NodeContext {
         this.taskExecutor = taskExecutor;
     }
 
+    public void setStore(NodeStore store) {
+        this.store = store;
+    }
+
 }

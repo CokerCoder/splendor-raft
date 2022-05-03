@@ -10,4 +10,8 @@ public class RequestVoteRpcMessage extends AbstractRpcMessage<RequestVoteRpc> {
         super(rpc, sourceNodeId, channel);
     }
 
+    public RequestVoteRpcMessage(RequestVoteRpc rpc, NodeId of) {
+        this(rpc, of, null);
+    }
+
 }

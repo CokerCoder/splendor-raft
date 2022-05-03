@@ -45,6 +45,9 @@ public class NodeBuilder {
     private TaskExecutor taskExecutor = null;
 
 
+    private NodeStore nodeStore = null;
+
+
     public NodeBuilder(NodeEndpoint endpoint) {
         this(Collections.singletonList(endpoint), endpoint.getId());
     }
@@ -72,6 +75,11 @@ public class NodeBuilder {
         return this;
     }
 
+    public NodeBuilder setNodeStore(NodeStore nodeStore) {
+        this.nodeStore = nodeStore;
+        return this;
+    }
+
     public Node build() {
         return new RaftNode(buildContext());
     }
@@ -79,6 +87,7 @@ public class NodeBuilder {
 
     private NodeContext buildContext() {
         NodeContext context = new NodeContext();
+        context.setStore(nodeStore != null ? nodeStore : new MemoryNodeStore());
         context.setGroup(group);
         context.setSelfId(selfId);
         context.setEventBus(eventBus);

@@ -18,6 +18,14 @@ public class RequestVoteRpc {
         return candidateId;
     }
 
+    public int getLastLogIndex() {
+        return lastLogIndex;
+    }
+
+    public int getLastLogTerm() {
+        return lastLogTerm;
+    }
+
     public void setTerm(int term) {
         this.term = term;
     }

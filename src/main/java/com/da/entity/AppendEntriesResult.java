@@ -16,6 +16,10 @@ public class AppendEntriesResult {
     /** 当跟随者包含了匹配上 prevLogIndex 和 prevLogTerm 的日志时为真，否则为假  */
     private boolean success;
 
+    public boolean isSuccess() {
+        return success;
+    }
+
     public AppendEntriesResult(int term) {
         this.term = term;
     }
