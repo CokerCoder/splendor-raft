@@ -5,6 +5,10 @@ public class MemoryNodeStore implements NodeStore {
     private int term;
     private NodeId votedFor;
 
+    public MemoryNodeStore() {
+        this(0, null);
+    }
+
     public MemoryNodeStore(int term, NodeId votedFor) {
         this.term = term;
         this.votedFor = votedFor;

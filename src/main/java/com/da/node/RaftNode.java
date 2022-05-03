@@ -34,7 +34,7 @@ public class RaftNode implements Node {
         this.context = context;
     }
 
-    NodeContext getContext() {
+    public NodeContext getContext() {
         return context;
     }
 
@@ -53,7 +53,7 @@ public class RaftNode implements Node {
     }
 
     
-    void electionTimeout() {
+    public void electionTimeout() {
         context.taskExecutor().submit(this::doProcessElectionTimeout);
     }
 
@@ -189,7 +189,7 @@ public class RaftNode implements Node {
     }
 
 
-    void replicateLog() {
+    public void replicateLog() {
         context.taskExecutor().submit(this::doReplicateLog);
     }
 
