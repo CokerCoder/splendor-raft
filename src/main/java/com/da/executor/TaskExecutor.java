@@ -23,6 +23,8 @@ public interface TaskExecutor {
      */
     <V> Future<V> submit(Callable<V> task);
 
+
+
     /**
      * 关闭任务执行器
      * @throws InterruptedException

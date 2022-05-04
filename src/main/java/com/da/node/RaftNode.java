@@ -247,7 +247,6 @@ public class RaftNode implements Node {
     private void doReplicateLog(GroupMember member, int maxEntries) {
         // AppendEntriesRpc rpc = new AppendEntriesRpc();
         // set appendEntries attributes
-
         AppendEntriesRpc rpc = context.log().createAppendEntriesRpc(role.getTerm(), context.selfId(), member.getNextIndex(), maxEntries);
 
         context.rpcAdapter().sendAppendEntries(rpc, member.getEndpoint());

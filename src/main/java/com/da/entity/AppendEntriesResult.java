@@ -36,7 +36,6 @@ public class AppendEntriesResult {
         this.success = success;
     }
 
-
 //    public static AppendEntriesResult fail() {
 //        return new AppendEntriesResult(false);
 //    }
