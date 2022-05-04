@@ -141,6 +141,10 @@ public class EntryIndexFile implements Iterable<EntryIndexItem>{
         return entryIndexMap.get(index).getOffset();
     }
 
+    public void close() throws IOException {
+        seekableFile.close();
+    }
+
     private class EntryIndexIterator implements Iterator<EntryIndexItem>{
         private final int entryIndexCount;
         private int currentEntryIndex;
