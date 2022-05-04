@@ -1,17 +1,10 @@
 package com.da.rpc;
 
-import java.util.Collection;
-
 import com.da.entity.*;
-import com.da.node.Node;
 import com.da.node.nodestatic.NodeEndpoint;
 
-
-
-// 最终RPC服务转换成的适配器接口，RPC service暂时没有实现
-// 该类相当于lu-raft里的RpcClient，但是把可以发送的request拆分成了具体的（下面四个）
 public interface RPCAdapter {
-    
+
     // using blocking calls
 
     /**
@@ -25,8 +18,6 @@ public interface RPCAdapter {
      * @param request The request information
      * @param destination The target node
      * @return The rpc result
-     *  destination 类型待定（需要address和port)
-     *  RPC 需调用 Node的 XXXResult handleXXX(XXXRpc)
      */
     RequestVoteResult requestVoteRPC(RequestVoteRpc request, NodeEndpoint destination);
 
@@ -38,9 +29,9 @@ public interface RPCAdapter {
      */
     AppendEntriesResult appendEntriesRPC(AppendEntriesRpc request, NodeEndpoint destination);
 
-    // /**
-    //  * Close all connection to other nodes and stop listening
-    //  */
+    /**
+    * Close all connections to other nodes and stop listening
+    */
     void close();
 
 }

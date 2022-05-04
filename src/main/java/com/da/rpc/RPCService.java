@@ -10,13 +10,12 @@ import java.util.Map;
 
 /**
  * A main toolkit of RPC for a node. All RPCs should be processed via this class.
- * 构造函数传入的node类型待定
  */
 public class RPCService implements RPCAdapter {
 
     private RPCServer server;
-    private Map<NodeEndpoint, RPCClient> remotes;
-    private RaftNode node;
+    private final Map<NodeEndpoint, RPCClient> remotes;
+    private final RaftNode node;
 
     public RPCService(RaftNode node) {
         this.node = node;
@@ -28,19 +27,16 @@ public class RPCService implements RPCAdapter {
         server = new RPCServer(port, node);
         try {
             server.start();
-        } catch (IOException e) {
-
-        }
+        } catch (IOException ignored) {}
     }
 
     @Override
     public RequestVoteResult requestVoteRPC(RequestVoteRpc request, NodeEndpoint destination) {
-        if (!remotes.containsKey(destination)) { 
+        if (!remotes.containsKey(destination)) {
             RPCClient client = new RPCClient(destination.getAddress().toString());
             remotes.put(destination, client);
         }
-        RequestVoteResult result = remotes.get(destination).requestVoteRPC(request);
-        return result;
+        return remotes.get(destination).requestVoteRPC(request);
     }
 
 
@@ -50,8 +46,7 @@ public class RPCService implements RPCAdapter {
             RPCClient client = new RPCClient(destination.getAddress().toString());
             remotes.put(destination, client);
         }
-        AppendEntriesResult result = remotes.get(destination).appendEntriesRPC(request);
-        return result;
+        return remotes.get(destination).appendEntriesRPC(request);
     }
 
     @Override
