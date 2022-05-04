@@ -1,23 +1,30 @@
 package com.da.rpc;
 
 import com.da.entity.*;
-import com.da.node.Node;
+import com.da.log.Entry;
+import com.da.log.GeneralEntry;
+import com.da.node.NodeId;
+import com.da.node.RaftNode;
+
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import io.grpc.stub.StreamObserver;
 
+import com.da.rpc.proto.*;
+
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * RPCServer is used for a node to listen to a port and expose its methods.
  */
-class RPCServer {
+public class RPCServer {
 
     private Server server;
 
-    public RPCServer(int port, Node node) {
+    public RPCServer(int port, RaftNode node) {
         server = ServerBuilder.forPort(port).addService(new RaftService(node)).build();
-
     }
 
     public void start() throws IOException {
@@ -35,33 +42,64 @@ class RPCServer {
      */
     private static class RaftService extends RaftGrpc.RaftImplBase {
 
-        private final Node node;
-        private final RequestVoteReply.Builder RVRbuilder = RequestVoteReply.newBuilder();
-        private final AppendEntriesReply.Builder AERbuilder = AppendEntriesReply.newBuilder();
+        private final RaftNode node;
+        private final RequestVoteReply.Builder RVRBuilder = RequestVoteReply.newBuilder();
+        private final AppendEntriesReply.Builder AERBuilder = AppendEntriesReply.newBuilder();
 
-        public RaftService(Node node) {
+        public RaftService(RaftNode node) {
             this.node = node;
         }
 
         @Override
         public void requestVote(RequestVoteRequest request, StreamObserver<RequestVoteReply> responseObserver) {
-            RequestVoteRpc r = null; // TODO new RequestVoteRpc(); r.XXX = request.XXX;
-            RequestVoteResult result = node.handleRequestVote(r);
-            RequestVoteReply reply = RVRbuilder.setTerm(result.getTerm())
+
+            RequestVoteRpc rpc = new RequestVoteRpc();
+            rpc.setTerm(request.getTerm());
+            rpc.setCandidateId(NodeId.of(request.getCandidateId()));
+            rpc.setLastLogTerm(request.getLastLogTerm());
+            rpc.setLastLogIndex(request.getLastLogIndex());
+
+            RequestVoteResult result = node.onReceiveRequestVoteRpc(rpc);
+
+            RequestVoteReply reply = RVRBuilder
+                    .setTerm(result.getTerm())
                     .setVoteGranted(result.isVoteGranted())
                     .build();
+
             responseObserver.onNext(reply);
             responseObserver.onCompleted();
         }
 
         @Override
         public void appendEntries(AppendEntriesRequest request, StreamObserver<AppendEntriesReply> responseObserver) {
-            AppendEntriesRpc r = null; // TODO new AppendEntriesRpc(); r.XXX = request.XXX;
-            AppendEntriesResult result =  node.handleAppendEntries(r);
-//            AppendEntriesReply reply = AERbuilder.setTerm()
-//                    .setSuccess()
-//                    .build();
-//            responseObserver.onNext(reply);
+            List<Entry> entries = new ArrayList<>(request.getEntriesCount());
+            if (request.getEntriesList().get(0).getKind() == Entry.KIND_NO_OP) {
+                AppendEntriesRequest.Entry rpcEntry = request.getEntriesList().get(0);
+                Entry entry = new GeneralEntry(rpcEntry.getIndex(), rpcEntry.getTerm(), rpcEntry.toByteArray());
+                entries.add(entry);
+            }
+            else {
+                for (AppendEntriesRequest.Entry rpcEntry : request.getEntriesList()) {
+                    Entry entry = new GeneralEntry(rpcEntry.getIndex(), rpcEntry.getTerm(), rpcEntry.toByteArray());
+                    entries.add(entry);
+                }
+            }
+            AppendEntriesRpc rpc = new AppendEntriesRpc();
+            rpc.setTerm(request.getTerm());
+            rpc.setPrevLogTerm(request.getPrevLogTerm());
+            rpc.setPrevLogIndex(request.getPrevLogIndex());
+            rpc.setLeaderId(NodeId.of(request.getLeaderId()));
+            rpc.setLeaderCommit(request.getLeaderCommit());
+            rpc.setEntries(entries);
+
+            AppendEntriesResult result =  node.onReceiveAppendEntriesRpc(rpc);
+
+            AppendEntriesReply reply = AERBuilder
+                    .setTerm(result.getTerm())
+                    .setSuccess(result.isSuccess())
+                    .build();
+
+            responseObserver.onNext(reply);
             responseObserver.onCompleted();
         }
     }

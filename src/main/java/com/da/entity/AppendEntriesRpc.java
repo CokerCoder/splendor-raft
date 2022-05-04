@@ -45,6 +45,14 @@ public class AppendEntriesRpc {
         return prevLogTerm;
     }
 
+    public int getLeaderCommit() {
+        return leaderCommit;
+    }
+
+    public List<Entry> getEntries() {
+        return entries;
+    }
+
 
     public void setTerm(int term) {
         this.term = term;
@@ -64,6 +72,10 @@ public class AppendEntriesRpc {
 
     public void setLeaderCommit(int leaderCommit) {
         this.leaderCommit = leaderCommit;
+    }
+
+    public void setEntries(List<Entry> entries) {
+        this.entries = entries;
     }
     
 }
