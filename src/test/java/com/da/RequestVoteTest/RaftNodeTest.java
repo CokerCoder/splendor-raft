@@ -77,6 +77,9 @@ public class RaftNodeTest {
 
         // check rpc data
         MockRPCAdapter mockRPCAdapter = (MockRPCAdapter) node.getContext().rpcAdapter();
+        // should be two messages sent
+        Assert.assertEquals(2, mockRPCAdapter.getMessageCount());
+
         RequestVoteRpc rpc = (RequestVoteRpc) mockRPCAdapter.getRpc();
         Assert.assertEquals(1, rpc.getTerm());
         Assert.assertEquals(NodeId.of("A"), rpc.getCandidateId());

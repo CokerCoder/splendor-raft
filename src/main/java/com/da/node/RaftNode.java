@@ -2,6 +2,8 @@ package com.da.node;
 
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 
 import com.da.entity.AppendEntriesResult;
 import com.da.entity.AppendEntriesRpc;
@@ -56,6 +58,7 @@ public class RaftNode implements Node {
     
     public void electionTimeout() {
         // context.taskExecutor().submit(this::doProcessElectionTimeout);
+        // blocking method 
         doProcessElectionTimeout();;
     }
 
@@ -79,12 +82,22 @@ public class RaftNode implements Node {
         // Blocking
         Set<NodeEndpoint> destinations = context.group().listEndPointExceptSelf();
         for (NodeEndpoint dest : destinations) {
-            RequestVoteResult result = context.rpcAdapter().
-                requestVoteRPC(rpc, dest);
-            // receive and parse the results from destinations
-            onReceiveRequestVoteResult(result);
-        }
 
+            // send to all endpoints except self the requestVoteRpc using 
+            // the single thread executor
+            final Future<RequestVoteResult> future = context.taskExecutor().submit(
+                () -> context.rpcAdapter().requestVoteRPC(rpc, dest));
+            // try get the requestVoteRpcResult with a seperate runnable task
+            context.taskExecutor().submit(
+                () -> {
+                    try {
+                        onReceiveRequestVoteResult(future.get());
+                    } catch (InterruptedException | ExecutionException e) {
+                        e.printStackTrace();
+                    }
+                });
+
+        }
     }
 
     private void becomeFollower(int term, NodeId votedFor, NodeId leaderId, boolean scheduleElectionTimeout) {
@@ -115,6 +128,8 @@ public class RaftNode implements Node {
 
 
     public RequestVoteResult onReceiveRequestVoteRpc(RequestVoteRpc rpc) {
+        // return (RequestVoteResult) context.taskExecutor().submit(
+        //     () -> doProcessRequestVoteRpc(rpc));
         return doProcessRequestVoteRpc(rpc);
     }
 
@@ -156,8 +171,8 @@ public class RaftNode implements Node {
 
 
     public void onReceiveRequestVoteResult(RequestVoteResult result) {
-        // context.taskExecutor().submit(() -> doProcessRequestVoteResult(result));
-        doProcessRequestVoteResult(result);
+        context.taskExecutor().submit(() -> doProcessRequestVoteResult(result));
+        // doProcessRequestVoteResult(result);
     }
 
     private void doProcessRequestVoteResult(RequestVoteResult result) {
@@ -218,9 +233,19 @@ public class RaftNode implements Node {
         rpc.setPrevLogTerm(0);
         rpc.setLeaderCommit(0);
 
-        AppendEntriesResult result = 
-            context.rpcAdapter().appendEntriesRPC(rpc, member.getEndpoint());
-        onReceiveAppendEntriesResult(result);
+        // send to all endpoints except self the AppendEntriesRpc using 
+        // the single thread executor
+        final Future<AppendEntriesResult> future = context.taskExecutor().submit(
+            () -> context.rpcAdapter().appendEntriesRPC(rpc, member.getEndpoint()));
+        // try get the appendEntriesResult with a seperate runnable task
+        context.taskExecutor().submit(
+            () -> {
+                try {
+                    onReceiveAppendEntriesResult(future.get());
+                } catch (InterruptedException | ExecutionException e) {
+                    e.printStackTrace();
+                }
+            });
 
     }
 
@@ -274,8 +299,8 @@ public class RaftNode implements Node {
 
     @Subscribe
     public void onReceiveAppendEntriesResult(AppendEntriesResult result) {
-        // context.taskExecutor().submit(() -> doProcessAppendEntriesResult(resultMessage));
-        doProcessAppendEntriesResult(result);
+        context.taskExecutor().submit(() -> doProcessAppendEntriesResult(result));
+        // doProcessAppendEntriesResult(result);
     }
 
 

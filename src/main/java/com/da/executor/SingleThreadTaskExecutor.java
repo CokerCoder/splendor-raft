@@ -23,10 +23,10 @@ public class SingleThreadTaskExecutor implements TaskExecutor {
         executorService = Executors.newSingleThreadExecutor(threadFactory);
     }
 
-    // @Override
-    // public Future<?> submit(Runnable task) {
-    //     return executorService.submit(task);
-    // }
+    @Override
+    public Future<?> submit(Runnable task) {
+        return executorService.submit(task);
+    }
 
     @Override
     public <V> Future<V> submit(Callable<V> task) {
