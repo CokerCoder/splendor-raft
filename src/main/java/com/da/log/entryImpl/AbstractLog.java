@@ -16,6 +16,7 @@ import java.util.List;
 public abstract class AbstractLog implements Log {
     private static final Logger logger = LoggerFactory.getLogger(AbstractLog.class);
     protected EntrySequence entrySequence;
+    protected int commitIndex = 0;
 
     //获取最后一条日志元信息
     public EntryMeta getLastEntryMeta(){
@@ -29,7 +30,6 @@ public abstract class AbstractLog implements Log {
     public AppendEntriesRpc createAppendEntriesRpc(int term, NodeId selfId,
                                                    int nextIndex, int maxEntries){
         int nextLogIndex = entrySequence.getNextLogIndex();
-        int commitIndex = entrySequence.getCommitIndex();  //自加
         if(nextIndex>nextLogIndex){
             throw new IllegalArgumentException("illegal next index"+nextIndex);
         }
@@ -199,6 +199,9 @@ public abstract class AbstractLog implements Log {
         //注意如果此处移除了已经应用的日志则需从头开始构建状态机
         logger.debug("remove entries after {}", index);
         entrySequence.removeAfter(index);
+        if(index<commitIndex){
+            commitIndex = index;
+        }
     }
 
     private void appendEntriesFromLeader(EntrySequenceView leaderEntries){
@@ -215,10 +218,9 @@ public abstract class AbstractLog implements Log {
         if(!validateNewCommitIndex(newCommitIndex, currenTerm)){
             return;
         }
-        int commitIndex = entrySequence.getCommitIndex();  //自加
         logger.debug("advance commit index from {} to {}", commitIndex, newCommitIndex);
         entrySequence.commit(newCommitIndex);
-        //advanceApplyIndex();
+        commitIndex = newCommitIndex;
     }
 
     private boolean validateNewCommitIndex(int newCommitIndex, int currentTerm){
@@ -239,5 +241,20 @@ public abstract class AbstractLog implements Log {
             return false;
         }
         return true;
+    }
+
+    @Override
+    public int getNextIndex() {
+        return entrySequence.getNextLogIndex();
+    }
+
+    @Override
+    public int getCommitIndex() {
+        return commitIndex;
+    }
+
+    @Override
+    public void close() {
+        entrySequence.close();
     }
 }

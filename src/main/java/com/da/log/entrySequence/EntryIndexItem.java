@@ -2,37 +2,42 @@ package com.da.log.entrySequence;
 
 import com.da.log.EntryMeta;
 
-//自加
-public class EntryIndexItem {
-    private int index;
-    private long offset;
-    private int kind;
-    private int term;
+import javax.annotation.concurrent.Immutable;
 
-    public EntryIndexItem(int index, long offset, int kind, int term) {
+//自加
+@Immutable
+public class EntryIndexItem {
+
+    private final int index;
+    private final long offset;
+    private final int kind;
+    private final int term;
+
+    EntryIndexItem(int index, long offset, int kind, int term) {
         this.index = index;
         this.offset = offset;
         this.kind = kind;
         this.term = term;
     }
 
-    public EntryMeta toEntryMeta(){
-        return new EntryMeta(kind, index, term);
-    }
-
-    public int getIndex() {
+    int getIndex() {
         return index;
     }
 
-    public long getOffset() {
+    long getOffset() {
         return offset;
     }
 
-    public int getKind() {
+    int getKind() {
         return kind;
     }
 
-    public int getTerm() {
+    int getTerm() {
         return term;
     }
+
+    EntryMeta toEntryMeta() {
+        return new EntryMeta(kind, index, term);
+    }
+
 }

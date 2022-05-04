@@ -1,5 +1,7 @@
 package com.da.log.entryImpl;
 
+import com.da.log.LogGeneration;
+import com.da.log.RootDir;
 import com.da.log.entrySequence.FileEntrySequence;
 
 import java.io.File;
@@ -14,9 +16,7 @@ public class FileLog extends AbstractLog{
         LogGeneration latestGeneration = rootDir.getLatestGeneration();
         if(latestGeneration!=null){
             //日志存在
-            entrySequence = new FileEntrySequence(
-                    latestGeneration,latestGeneration.getLogIndexOffset()
-            );
+            entrySequence = new FileEntrySequence(latestGeneration,latestGeneration.getLastIncludedIndex()+1);
         }else{
             //日志不存在
             LogGeneration firstGeneration = rootDir.createFirstGeneration();

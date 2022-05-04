@@ -2,7 +2,7 @@ package com.da.log.entrySequence;
 
 import com.da.log.Entry;
 import com.da.log.EntryMeta;
-import com.da.log.LogException;
+import com.da.log.LogDir;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -196,6 +196,11 @@ public class FileEntrySequence extends AbstractEntrySequence{
 
     @Override
     public void close() {
-
+        try {
+            entriesFile.close();
+            entryIndexFile.close();
+        } catch (IOException e) {
+            throw new IllegalStateException("failed to close", e);
+        }
     }
 }

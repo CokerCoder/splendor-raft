@@ -1,4 +1,4 @@
-package com.da.log.entrySequence;
+package com.da.log;
 
 import java.io.File;
 
