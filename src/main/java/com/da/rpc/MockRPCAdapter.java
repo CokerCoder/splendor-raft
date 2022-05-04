@@ -52,7 +52,7 @@ public class MockRPCAdapter implements RPCAdapter {
 
     public static class Message {
 
-        private Object rpc;
+        Object rpc;
         private NodeId destinationNodeId;
         private Object result;
 

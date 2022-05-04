@@ -13,7 +13,7 @@ import java.util.List;
 /**
  * RPCClient is used for a node to call remote method from other nodes.
  */
-class RPCClient {
+public class RPCClient {
 
     private final RaftGrpc.RaftBlockingStub blockingStub;
     private final ManagedChannel channel;

@@ -23,8 +23,6 @@ import com.google.common.eventbus.Subscribe;
 
 public class RaftNode implements Node {
 
-    private static final int RPC_PORT = 3333;
-
     private final NodeContext context;
     private boolean started;
     private volatile AbstractNodeRole role;
@@ -47,7 +45,7 @@ public class RaftNode implements Node {
             return;
         }
         context.eventBus().register(this);
-        context.rpcAdapter().listen(RPC_PORT);
+        context.rpcAdapter().listen(context.group().getSelfEndpoint().getAddress().getPort());
 
         // load term, votedFor from store and become follower
         NodeStore store = context.store();

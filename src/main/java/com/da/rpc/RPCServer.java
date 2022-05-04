@@ -19,7 +19,7 @@ import java.util.List;
 /**
  * RPCServer is used for a node to listen to a port and expose its methods.
  */
-class RPCServer {
+public class RPCServer {
 
     private Server server;
 

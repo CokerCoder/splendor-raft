@@ -67,4 +67,8 @@ public class NodeGroup {
         return memberMap.size();
     }
 
+    public NodeEndpoint getSelfEndpoint() {
+        return findMember(selfId).getEndpoint();
+    }
+
 }
