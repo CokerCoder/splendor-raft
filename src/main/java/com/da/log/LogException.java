@@ -1,4 +1,4 @@
-package com.da.log.entryImpl;
+package com.da.log;
 
 /**
  * Thrown when failed to operate log.

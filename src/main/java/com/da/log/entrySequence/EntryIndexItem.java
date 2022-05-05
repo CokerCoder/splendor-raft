@@ -32,7 +32,7 @@ public class EntryIndexItem {
         return kind;
     }
 
-    int getTerm() {
+    public int getTerm() {
         return term;
     }
 
