@@ -9,6 +9,8 @@ import com.da.entity.AppendEntriesResult;
 import com.da.entity.AppendEntriesRpc;
 import com.da.entity.RequestVoteResult;
 import com.da.entity.RequestVoteRpc;
+import com.da.kv.server.KVService;
+import com.da.log.StateMachine;
 import com.da.node.nodestatic.GroupMember;
 import com.da.node.nodestatic.NodeEndpoint;
 import com.da.node.roles.AbstractNodeRole;
@@ -20,8 +22,15 @@ import com.da.scheduler.ElectionTimeoutTask;
 import com.da.scheduler.LogReplicationTask;
 import com.google.common.eventbus.Subscribe;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 
 public class RaftNode implements Node {
+
+    private static final Logger logger = LoggerFactory.getLogger(RaftNode.class);
+
+    private StateMachine stateMachine;
 
     private final NodeContext context;
     private boolean started;
@@ -42,8 +51,11 @@ public class RaftNode implements Node {
     @Override
     public synchronized void start() {
         if (started) {
+            logger.info("Node {} has already started, return.", this);
             return;
         }
+        logger.info("Node {} started", this);
+
         context.eventBus().register(this);
         context.rpcAdapter().listen(context.group().getSelfEndpoint().getAddress().getPort());
 
@@ -57,6 +69,7 @@ public class RaftNode implements Node {
     public void electionTimeout() {
         // context.taskExecutor().submit(this::doProcessElectionTimeout);
         // blocking method 
+        System.out.println("Triggered electionTimeout");
         doProcessElectionTimeout();;
     }
 
@@ -113,6 +126,8 @@ public class RaftNode implements Node {
         if (newRole.getName() == RoleName.FOLLOWER) {
             store.setVotedFor(((FollowerNodeRole)newRole).getVotedFor());
         }
+        logger.debug("Node {} changed from {} to {}.", this, role, newRole);
+        System.out.println(String.format("Node %s changed from %s to %s.", this, role, newRole));
         role = newRole;
     }
 
@@ -126,6 +141,7 @@ public class RaftNode implements Node {
 
 
     public RequestVoteResult onReceiveRequestVoteRpc(RequestVoteRpc rpc) {
+        System.out.println("Received requestVoteRpc");
         // return (RequestVoteResult) context.taskExecutor().submit(
         //     () -> doProcessRequestVoteRpc(rpc));
         return doProcessRequestVoteRpc(rpc);
@@ -330,6 +346,14 @@ public class RaftNode implements Node {
         context.store().close();
         context.taskExecutor().shutdown();
         started = false;
+    }
+
+    @Override
+    public void registerStateMachine(KVService service) {
+        this.stateMachine = service;
+    }
+
+    public void appendLog(byte[] bytes) {
     }
 
 }
