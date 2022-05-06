@@ -7,6 +7,7 @@ import com.da.entity.AppendEntriesRpc;
 import com.da.entity.RequestVoteResult;
 import com.da.entity.RequestVoteRpc;
 import com.da.log.EntryMeta;
+import com.da.log.Log;
 import com.da.node.nodestatic.GroupMember;
 import com.da.node.roles.AbstractNodeRole;
 import com.da.node.roles.CandidateNodeRole;
@@ -236,13 +237,15 @@ public class RaftNode implements Node {
      */
     void replicateLog() {
 
-        context.taskExecutor().submit(this::doReplicateLog);
+        //context.taskExecutor().submit(this::doReplicateLog);
+        doReplicateLog();
     }
 
     private void doReplicateLog() {
         LOGGER.debug("replicate log");
         for (GroupMember member : context.group().listReplicationTarget()) {
-            doReplicateLog(member);
+            // todo: can be wrong
+            doReplicateLog(member, Log.ALL_ENTRIES);
             //doReplicateLog(member, context.config().getMaxReplicationEntries());
         }
     }
