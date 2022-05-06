@@ -7,8 +7,8 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import com.da.node.RaftNode;
-import com.sun.org.slf4j.internal.Logger;
-import com.sun.org.slf4j.internal.LoggerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 //集群成员映射表
 public class NodeGroup {

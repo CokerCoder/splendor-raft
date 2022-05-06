@@ -20,8 +20,8 @@ import com.da.rpc.messages.RequestVoteRpcMessage;
 import com.da.scheduler.ElectionTimeoutTask;
 import com.da.scheduler.LogReplicationTask;
 import com.google.common.eventbus.Subscribe;
-import com.sun.org.slf4j.internal.Logger;
-import com.sun.org.slf4j.internal.LoggerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 public class RaftNode implements Node {
@@ -235,7 +235,7 @@ public class RaftNode implements Node {
     /**
      * 发送心跳或者appendEntries
      */
-    void replicateLog() {
+    public void replicateLog() {
 
         //context.taskExecutor().submit(this::doReplicateLog);
         doReplicateLog();

@@ -193,7 +193,7 @@ public class FileEntrySequence extends AbstractEntrySequence{
             for(int i=pendingEntries.getFirst().getIndex(); i<=index;i++){
                 entry=pendingEntries.removeFirst();
                 offset=entriesFile.appendEntry(entry);
-                entryIndexFile.appenEntryIndex(i,offset,entry.getKind(),entry.getTerm());
+                entryIndexFile.appendEntryIndex(i,offset,entry.getKind(),entry.getTerm());
                 commitIndex = i;
             }
         }catch (IOException e){

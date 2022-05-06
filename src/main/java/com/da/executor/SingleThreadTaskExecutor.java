@@ -28,10 +28,10 @@ public class SingleThreadTaskExecutor implements TaskExecutor {
         return executorService.submit(task);
     }
 
-    // @Override
-    // public <V> Future<V> submit(Callable<V> task) {
-    //     return executorService.submit(task);
-    // }
+     @Override
+     public <V> Future<V> submit(Callable<V> task) {
+         return executorService.submit(task);
+     }
 
     @Override
     public void shutdown() throws InterruptedException {

@@ -13,12 +13,12 @@ public class DirectTaskExecutor implements TaskExecutor {
         return futureTask;
     }
 
-    // @Override
-    // public <V> Future<V> submit(Callable<V> task) {
-    //     FutureTask<V> futureTask = new FutureTask<V>(task);
-    //     futureTask.run();
-    //     return futureTask;
-    // }
+    @Override
+    public <V> Future<V> submit(Callable<V> task) {
+        FutureTask<V> futureTask = new FutureTask<V>(task);
+        futureTask.run();
+        return futureTask;
+    }
 
     @Override
     public void shutdown() throws InterruptedException {
