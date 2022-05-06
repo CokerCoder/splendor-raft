@@ -4,8 +4,8 @@ import com.da.entity.AppendEntriesRpc;
 import com.da.log.*;
 import com.da.log.entrySequence.EntrySequence;
 import com.da.node.NodeId;
-import com.sun.org.slf4j.internal.Logger;
-import com.sun.org.slf4j.internal.LoggerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import java.util.Collections;
