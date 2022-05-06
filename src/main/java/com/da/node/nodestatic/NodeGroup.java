@@ -6,8 +6,15 @@ import javax.annotation.Nonnull;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import com.da.node.RaftNode;
+import com.sun.org.slf4j.internal.Logger;
+import com.sun.org.slf4j.internal.LoggerFactory;
+
 //集群成员映射表
 public class NodeGroup {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(RaftNode.class); // slf4j 日志
+
     private final NodeId selfId;
     private Map<NodeId, GroupMember> memberMap;
 
@@ -68,7 +75,7 @@ public class NodeGroup {
         return memberMap.size();
     }
 
-    int getMatchIndexOfMajor() {
+    public int getMatchIndexOfMajor() {
         List<NodeMatchIndex> matchIndices = new ArrayList<>();
         for (GroupMember member : memberMap.values()) {
             if (!member.idEquals(selfId)) {
@@ -81,7 +88,7 @@ public class NodeGroup {
             throw new IllegalStateException("standalone or no major node");
         }
         Collections.sort(matchIndices);
-        logger.debug("match indices {}", matchIndices);
+        LOGGER.debug("match indices {}", matchIndices);
         // 取排序后的中间位置的matchIndex
         return matchIndices.get(count / 2).getMatchIndex();
     }

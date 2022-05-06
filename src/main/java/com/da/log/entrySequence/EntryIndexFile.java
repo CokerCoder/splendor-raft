@@ -54,8 +54,9 @@ public class EntryIndexFile implements Iterable<EntryIndexItem>{
         entryIndexCount = maxEntryIndex-minEntryIndex +1;
     }
 
+
     //追加日志条目元信息
-    public void appenEntryIndex(int index, long offset,int kind, int term) throws IOException{
+    public void appendEntryIndex(int index, long offset,int kind, int term) throws IOException{
         if(seekableFile.size()==0L){
             // 如果文件为空，则写入minEntryIndex
             seekableFile.writeInt(index);
@@ -146,9 +147,14 @@ public class EntryIndexFile implements Iterable<EntryIndexItem>{
         return entryIndexMap.get(index).getOffset();
     }
 
+    public int getEntryIndexCount() {
+        return entryIndexCount;
+    }
+
     public void close() throws IOException {
         seekableFile.close();
     }
+
 
     private class EntryIndexIterator implements Iterator<EntryIndexItem>{
         private final int entryIndexCount;
@@ -174,5 +180,6 @@ public class EntryIndexFile implements Iterable<EntryIndexItem>{
             checkModification();
             return entryIndexMap.get(currentEntryIndex);
         }
+
     }
 }

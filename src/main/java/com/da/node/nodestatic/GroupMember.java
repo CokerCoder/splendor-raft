@@ -44,11 +44,19 @@ public class GroupMember {
 
     int getMatchIndex(){return ensureReplicatingState().getMatchIndex();}
 
+    public boolean advanceReplicatingState(int lastEntryIndex) {
+        return ensureReplicatingState().advance(lastEntryIndex);
+    }
+
     public boolean idEquals(NodeId id) {
         return id.equals(endpoint.getId());
     }
 
     public NodeId getId(){
         return endpoint.getId();
+    }
+
+    public boolean backoffNextIndex() {
+        return ensureReplicatingState().backOffNextIndex();
     }
 }

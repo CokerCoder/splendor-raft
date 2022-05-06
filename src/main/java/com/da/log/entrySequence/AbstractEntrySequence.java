@@ -88,6 +88,13 @@ public abstract class AbstractEntrySequence implements EntrySequence{
 
     protected abstract List<Entry> doSubList(int fromIndex, int toIndex);
 
+    @Override
+    public List<Entry> subView(int fromIndex) {
+        if (isEmpty() || fromIndex > doGetLastLogIndex()) {
+            return Collections.emptyList();
+        }
+        return subList(Math.max(fromIndex, doGetFirstLogIndex()), nextLogIndex);
+    }
 
     //追加单条日志
     public void append(Entry entry) {

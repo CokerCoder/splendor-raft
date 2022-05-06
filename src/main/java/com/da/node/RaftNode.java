@@ -90,8 +90,10 @@ public class RaftNode implements Node {
         RequestVoteRpc rpc = new RequestVoteRpc();
         rpc.setTerm(newTerm);
         rpc.setCandidateId(context.selfId());
-        rpc.setLastLogIndex(0);
-        rpc.setLastLogTerm(0);
+//        rpc.setLastLogIndex(0);
+//        rpc.setLastLogTerm(0);
+        rpc.setLastLogIndex(lastEntryMeta.getIndex());
+        rpc.setLastLogTerm(lastEntryMeta.getTerm());
         context.rpcAdapter().sendRequestVote(rpc, context.group().listEndPointExceptSelf());
 
     }
@@ -241,6 +243,7 @@ public class RaftNode implements Node {
         LOGGER.debug("replicate log");
         for (GroupMember member : context.group().listReplicationTarget()) {
             doReplicateLog(member);
+            //doReplicateLog(member, context.config().getMaxReplicationEntries());
         }
     }
 
@@ -309,7 +312,7 @@ public class RaftNode implements Node {
 
     // TODO:
     private boolean appendEntries(AppendEntriesRpc rpc) {
-        boolean result = context.log().appendEntriesFromLeader(rpc.getPrevLogIndex()
+        boolean result = context.log().appendEntriesFromLeader(rpc.getPrevLogIndex(),
         rpc.getPrevLogTerm(), rpc.getEntries());
 
         if (result) {
@@ -346,22 +349,22 @@ public class RaftNode implements Node {
         GroupMember member = context.group().getMember(sourceNodeId);
         // 没有指定的成员
         if (member == null) {
-            logger.info("unexpected append entries result from node {}, node maybe removed", sourceNodeId);
+            LOGGER.debug("unexpected append entries result from node {}, node maybe removed", sourceNodeId);
             return;
         }
         AppendEntriesRpc rpc = resultMessage.getRpc();
         if (result.isSuccess()) {
             // 回复成功
             // 推进matchIndex和nextIndex
-            if (member.advanceReplicatingState(rpc.getLastEntrylndex())) {
+            if (member.advanceReplicatingState(rpc.getLastEntryIndex())) {
                 // 推进本地的commitIndex
                 context.log().advanceCommitIndex(
                         context.group().getMatchIndexOfMajor(), role.getTerm());
-                )
+
             } else {
                 // 对方回复失败
                 if (!member.backoffNextIndex()) {
-                    logger.warn("cannot back off next index more, node {}", sourceNodeId);
+                    LOGGER.debug("cannot back off next index more, node {}", sourceNodeId);
                 }
             }
         }

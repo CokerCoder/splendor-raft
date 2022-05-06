@@ -1,5 +1,6 @@
 package com.da.LogTest;
 
+import com.da.log.Entry;
 import com.da.log.EntryMeta;
 import com.da.log.NoOpEntry;
 import com.da.log.entrySequence.MemoryEntrySequence;

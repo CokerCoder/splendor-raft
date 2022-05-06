@@ -68,5 +68,9 @@ public class AppendEntriesRpc {
     public void setLeaderCommit(int leaderCommit) {
         this.leaderCommit = leaderCommit;
     }
-    
+
+    public int getLastEntryIndex() {
+        return this.entries.isEmpty() ? this.prevLogIndex : this.entries.get(this.entries.size() - 1).getIndex();
+    }
+
 }
