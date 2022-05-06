@@ -125,9 +125,11 @@ public class EntryIndexFileTest {
         Assert.assertEquals(1, item.getKind());
         Assert.assertEquals(3, item.getTerm());
         Assert.assertTrue(iterator.hasNext());
-        item = iterator.next();
-        Assert.assertEquals(4, item.getIndex());
-        Assert.assertFalse(iterator.hasNext());
+        EntryIndexItem item2 = iterator.next();
+        Assert.assertEquals(4, item2.getIndex());
+//        Assert.assertTrue(iterator.hasNext());
+//        EntryIndexItem item2 = iterator.next();
+//        Assert.assertEquals(3, item.getIndex());
     }
 
 

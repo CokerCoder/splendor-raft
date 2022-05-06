@@ -93,6 +93,10 @@ public class NodeGroup {
         return matchIndices.get(count / 2).getMatchIndex();
     }
 
+    public NodeEndpoint getSelfEndpoint() {
+        return findMember(selfId).getEndpoint();
+
+    }
 
     /**
      * Node match index.

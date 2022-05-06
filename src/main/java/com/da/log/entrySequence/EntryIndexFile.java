@@ -14,9 +14,9 @@ public class EntryIndexFile implements Iterable<EntryIndexItem>{
     private static final int LENGTH_ENTRY_INDEX_ITEM = 16;
 
     private final SeekableFile seekableFile;
-    private int entryIndexCount;
-    private int minEntryIndex;
-    private int maxEntryIndex;
+    private int entryIndexCount; // 日志条目数
+    private int minEntryIndex;   // 最小日志索引
+    private int maxEntryIndex;   // 最大日志索引
     private Map<Integer, EntryIndexItem> entryIndexMap = new HashMap<>();
 
     //构造函数-普通文件
@@ -178,7 +178,7 @@ public class EntryIndexFile implements Iterable<EntryIndexItem>{
 
         public EntryIndexItem next(){
             checkModification();
-            return entryIndexMap.get(currentEntryIndex);
+            return entryIndexMap.get(currentEntryIndex++);
         }
 
     }

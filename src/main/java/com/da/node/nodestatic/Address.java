@@ -17,5 +17,9 @@ public class Address {
         return port;
     }
 
+    @Override
+    public String toString() {
+        return String.format("%s:%d", host, port);
+    }
 
 }

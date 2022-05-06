@@ -8,6 +8,7 @@ import java.io.File;
 
 //p141
 public class FileLog extends AbstractLog{
+
     private final RootDir rootDir;
 
     public FileLog(File baseDir){

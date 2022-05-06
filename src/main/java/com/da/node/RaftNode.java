@@ -1,6 +1,9 @@
 package com.da.node;
 
 import java.util.Objects;
+import java.util.Set;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 
 import com.da.entity.AppendEntriesResult;
 import com.da.entity.AppendEntriesRpc;
@@ -9,14 +12,13 @@ import com.da.entity.RequestVoteRpc;
 import com.da.log.EntryMeta;
 import com.da.log.Log;
 import com.da.node.nodestatic.GroupMember;
+import com.da.node.nodestatic.NodeEndpoint;
 import com.da.node.roles.AbstractNodeRole;
 import com.da.node.roles.CandidateNodeRole;
 import com.da.node.roles.FollowerNodeRole;
 import com.da.node.roles.LeaderNodeRole;
 import com.da.node.roles.RoleName;
 import com.da.rpc.messages.AppendEntriesResultMessage;
-import com.da.rpc.messages.AppendEntriesRpcMessage;
-import com.da.rpc.messages.RequestVoteRpcMessage;
 import com.da.scheduler.ElectionTimeoutTask;
 import com.da.scheduler.LogReplicationTask;
 import com.google.common.eventbus.Subscribe;
@@ -58,7 +60,7 @@ public class RaftNode implements Node {
         }
         // 注册到自己的eventbus
         context.eventBus().register(this);
-        context.rpcAdapter().initialize();
+        context.rpcAdapter().listen(context.group().getSelfEndpoint().getAddress().getPort());
 
         // load term, votedFor from store and become follower
         NodeStore store = context.store();
@@ -68,7 +70,9 @@ public class RaftNode implements Node {
 
     
     public void electionTimeout() {
-        context.taskExecutor().submit(this::doProcessElectionTimeout);
+        // context.taskExecutor().submit(this::doProcessElectionTimeout);
+        // blocking method 
+        doProcessElectionTimeout();;
     }
 
     private void doProcessElectionTimeout() {
@@ -76,7 +80,6 @@ public class RaftNode implements Node {
             LOGGER.debug("node {}, current role is leader, ignore election timeout", context.selfId());
             return;
         }
-
         // follower: start election
         // candidate: restart election
         // increase the term
@@ -91,12 +94,29 @@ public class RaftNode implements Node {
         RequestVoteRpc rpc = new RequestVoteRpc();
         rpc.setTerm(newTerm);
         rpc.setCandidateId(context.selfId());
-//        rpc.setLastLogIndex(0);
-//        rpc.setLastLogTerm(0);
         rpc.setLastLogIndex(lastEntryMeta.getIndex());
         rpc.setLastLogTerm(lastEntryMeta.getTerm());
-        context.rpcAdapter().sendRequestVote(rpc, context.group().listEndPointExceptSelf());
+        // context.rpcAdapter().sendRequestVote(rpc, context.group().listEndPointExceptSelf());
 
+        // Blocking
+        Set<NodeEndpoint> destinations = context.group().listEndPointExceptSelf();
+        for (NodeEndpoint dest : destinations) {
+
+            // send to all endpoints except self the requestVoteRpc using 
+            // the single thread executor
+            final Future<RequestVoteResult> future = context.taskExecutor().submit(
+                () -> context.rpcAdapter().requestVoteRPC(rpc, dest));
+            // try get the requestVoteRpcResult with a seperate runnable task
+            context.taskExecutor().submit(
+                () -> {
+                    try {
+                        onReceiveRequestVoteResult(future.get());
+                    } catch (InterruptedException | ExecutionException e) {
+                        e.printStackTrace();
+                    }
+                });
+
+        }
     }
 
     private void becomeFollower(int term, NodeId votedFor, NodeId leaderId, boolean scheduleElectionTimeout) {
@@ -128,22 +148,15 @@ public class RaftNode implements Node {
         return context.scheduler().scheduleLogReplicationTask(this::replicateLog);
     }
 
-    @Subscribe
-    public void onReceiveRequestVoteRpc(RequestVoteRpcMessage rpcMessage) {
-        context.taskExecutor().submit(
-                () -> context.rpcAdapter().replyRequestVote(
-                    doProcessRequestVoteRpc(rpcMessage),
-                    // 找到发送消息的节点
-                    context.group().getMember(rpcMessage.getSourceNodeId()).getEndpoint())
 
-        );
+    public RequestVoteResult onReceiveRequestVoteRpc(RequestVoteRpc rpc) {
+        // return (RequestVoteResult) context.taskExecutor().submit(
+        //     () -> doProcessRequestVoteRpc(rpc));
+        return doProcessRequestVoteRpc(rpc);
     }
 
-    private RequestVoteResult doProcessRequestVoteRpc(RequestVoteRpcMessage rpcMessage) {
+    private RequestVoteResult doProcessRequestVoteRpc(RequestVoteRpc rpc) {
 
-        // reply current term if result's term is smaller than current one
-        // 如果对方term比自己小，则不投票并且返回自己的term给对象
-        RequestVoteRpc rpc = rpcMessage.get();
         if (rpc.getTerm() < role.getTerm()) {
             LOGGER.debug("term from rpc < current term, don't vote ({} <- {})",
                         rpc.getTerm(), role.getTerm());
@@ -183,12 +196,16 @@ public class RaftNode implements Node {
     }
 
 
-    @Subscribe
     public void onReceiveRequestVoteResult(RequestVoteResult result) {
         context.taskExecutor().submit(() -> doProcessRequestVoteResult(result));
+        // doProcessRequestVoteResult(result);
     }
 
     private void doProcessRequestVoteResult(RequestVoteResult result) {
+
+        if (result == null) {
+            return;
+        }
 
         // step down if result's term is larger than current term
         // 如果对象的term比自己大，则退化为follower角色
@@ -238,6 +255,9 @@ public class RaftNode implements Node {
     public void replicateLog() {
 
         //context.taskExecutor().submit(this::doReplicateLog);
+
+        // context.taskExecutor().submit(this::doReplicateLog);
+
         doReplicateLog();
     }
 
@@ -250,27 +270,39 @@ public class RaftNode implements Node {
         }
     }
 
+    // todo
     private void doReplicateLog(GroupMember member, int maxEntries) {
         // AppendEntriesRpc rpc = new AppendEntriesRpc();
         // set appendEntries attributes
         AppendEntriesRpc rpc = context.log().createAppendEntriesRpc(role.getTerm(), context.selfId(), member.getNextIndex(), maxEntries);
 
-        context.rpcAdapter().sendAppendEntries(rpc, member.getEndpoint());
+        // send to all endpoints except self the AppendEntriesRpc using 
+        // the single thread executor
+        final Future<AppendEntriesResult> future = context.taskExecutor().submit(
+            () -> context.rpcAdapter().appendEntriesRPC(rpc, member.getEndpoint()));
+        // try get the appendEntriesResult with a seperate runnable task
+//        context.taskExecutor().submit(
+//            () -> {
+//                try {
+//                    onReceiveAppendEntriesResult(future.get());
+//                } catch (InterruptedException | ExecutionException e) {
+//                    e.printStackTrace();
+//                }
+//            });
+
     }
 
 
-    @Subscribe
-    public void onReceiveAppendEntriesRpc(AppendEntriesRpcMessage rpcMessage) {
-        context.taskExecutor().submit(() ->
 
-                        context.rpcAdapter().replyAppendEntries(doProcessAppendEntriesRpc(rpcMessage),
-                                // 发送消息的节点
-                        context.group().getMember(rpcMessage.getSourceNodeId()).getEndpoint()));
-
+    public AppendEntriesResult onReceiveAppendEntriesRpc(AppendEntriesRpc rpc) {
+        // context.taskExecutor().submit(() ->
+        //                 context.rpcAdapter().replyAppendEntries(doProcessAppendEntriesRpc(rpcMessage), 
+        
+        //                 context.group().getMember(rpcMessage.getSourceNodeId()).getEndpoint()));
+        return doProcessAppendEntriesRpc(rpc);
     }
 
-    private AppendEntriesResult doProcessAppendEntriesRpc(AppendEntriesRpcMessage rpcMessage) {
-        AppendEntriesRpc rpc = rpcMessage.get();
+    private AppendEntriesResult doProcessAppendEntriesRpc(AppendEntriesRpc rpc) {
 
         // reply current term if term in rpc is smaller than current term
         // 如果对方term比自己小，则回复自己的term
@@ -329,11 +361,16 @@ public class RaftNode implements Node {
     @Subscribe
     public void onReceiveAppendEntriesResult(AppendEntriesResultMessage resultMessage) {
         context.taskExecutor().submit(() -> doProcessAppendEntriesResult(resultMessage));
+        // doProcessAppendEntriesResult(result);
     }
 
 
     private void doProcessAppendEntriesResult(AppendEntriesResultMessage resultMessage) {
         AppendEntriesResult result = resultMessage.get();
+
+        if (result == null) {
+            return;
+        }
 
         // step down if result's term is larger than current term
         // 如果对方term比自己大，则退化为Follower角色

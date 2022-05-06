@@ -16,7 +16,7 @@ public interface EntrySequence {
     // 获取下一条日志的索引
     int getNextLogIndex();
     // 获取序列的子视图 ， 到最后一条日志
-    List<Entry> subList(int fromIndex);    //获得序列的子视图
+    // List<Entry> subList(int fromIndex);    //获得序列的子视图
     List<Entry> subList(int fromIndex, int toIndex); //获得序列子视图，指定范围
     List<Entry> subView(int fromIndex);
     // 检查某个日志条目是否存在

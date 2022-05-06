@@ -20,7 +20,7 @@ public class FileEntrySequence extends AbstractEntrySequence{
     private final LinkedList<Entry> pendingEntries = new LinkedList<>();
 
     //Raft算法中初始commitIndex为0
-    private int commitIndex = 0;
+    private int commitIndex;
     public FileEntrySequence(LogDir logDir, int logIndexOffset){
         super(logIndexOffset);
         try{
@@ -41,10 +41,12 @@ public class FileEntrySequence extends AbstractEntrySequence{
 
     private void initialize(){
         if(entryIndexFile.isEmpty()){
+            commitIndex = logIndexOffset - 1;
             return;
         }
         logIndexOffset = entryIndexFile.getMinEntryIndex();
         nextLogIndex = entryIndexFile.getMaxEntryIndex()+1;
+        commitIndex = entryIndexFile.getMaxEntryIndex();
     }
 
     public int getCommitIndex(){

@@ -81,13 +81,13 @@
     <dependency>
       <groupId>com.google.protobuf</groupId>
       <artifactId>protobuf-java</artifactId>
-      <version>3.8.0</version>
+      <version>3.19.2</version>
     </dependency>
 
     <dependency>
-      <groupId>org.apache.logging.log4j</groupId>
-      <artifactId>log4j-slf4j-impl</artifactId>
-      <version>2.11.1</version>
+      <groupId>javax</groupId>
+      <artifactId>javaee-api</artifactId>
+      <version>8.0.1</version>
     </dependency>
   </dependencies>
 
@@ -167,7 +167,7 @@
               <goal>compile-custom</goal>
             </goals>
           </execution>
-        </executions>
+        </executions> 
       </plugin>
     </plugins>
   </build>

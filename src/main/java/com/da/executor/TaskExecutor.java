@@ -14,7 +14,6 @@ public interface TaskExecutor {
      */
     Future<?> submit(Runnable task);
 
-
     /**
      * 提交任务，任务有返回值
      * @param task
