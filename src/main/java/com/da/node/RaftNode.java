@@ -246,8 +246,6 @@ public class RaftNode implements Node {
      */
     public void replicateLog() {
 
-        System.out.println("replicate log here");
-
         // context.taskExecutor().submit(this::doReplicateLogAll);
 
         doReplicateLogAll();
@@ -266,44 +264,23 @@ public class RaftNode implements Node {
 
     private void doReplicateLog(GroupMember member, int maxEntries) {
 
-        System.out.println("here");
-        System.out.println("here2");
-        // AppendEntriesRpc rpc = new AppendEntriesRpc();
-        // rpc.setLeaderId(member.getId());
-        // rpc.setTerm(0);
-        // set appendEntries attributes
         AppendEntriesRpc rpc = context.log().createAppendEntriesRpc(role.getTerm(), context.selfId(), member.getNextIndex(), maxEntries);
-
-        System.out.println("here3");
-        System.out.println("here4");
-        System.out.println("here5");
-        System.out.println("here6");
-        LOGGER.debug("About to send {}", rpc);
 
         // send to all endpoints except self the AppendEntriesRpc using 
         // the single thread executor
         final Future<AppendEntriesResult> future = context.taskExecutor().submit(
             () -> context.rpcAdapter().appendEntriesRPC(rpc, member.getEndpoint()));
-        try {
-            onReceiveAppendEntriesResult(future.get(), rpc);
-        } catch (InterruptedException e1) {
-            // TODO Auto-generated catch block
-            e1.printStackTrace();
-        } catch (ExecutionException e1) {
-            // TODO Auto-generated catch block
-            e1.printStackTrace();
-        }
 
-        // // try get the appendEntriesResult with a seperate runnable task
-        // context.taskExecutor().submit(
-        //     () -> {
-        //         try {
-        //             // with the associated rpc
-        //             onReceiveAppendEntriesResult(future.get(), rpc);
-        //         } catch (InterruptedException | ExecutionException e) {
-        //             e.printStackTrace();
-        //         }
-        //     });
+        // try get the appendEntriesResult with a seperate runnable task
+        context.taskExecutor().submit(
+            () -> {
+                try {
+                    // with the associated rpc
+                    onReceiveAppendEntriesResult(future.get(), rpc);
+                } catch (InterruptedException | ExecutionException e) {
+                    e.printStackTrace();
+                }
+            });
 
     }
 
