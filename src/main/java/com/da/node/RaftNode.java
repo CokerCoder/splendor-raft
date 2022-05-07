@@ -190,6 +190,7 @@ public class RaftNode implements Node {
 
 
     public void onReceiveRequestVoteResult(RequestVoteResult result) {
+        if (result == null) return;
         LOGGER.debug("Node {} received {}", context.selfId(), result);
         // context.taskExecutor().submit(() -> doProcessRequestVoteResult(result));
         doProcessRequestVoteResult(result);
@@ -277,8 +278,8 @@ public class RaftNode implements Node {
                 try {
                     // with the associated rpc
                     onReceiveAppendEntriesResult(future.get(), rpc);
-                } catch (InterruptedException | ExecutionException e) {
-                    e.printStackTrace();
+                } catch (Exception e) {
+                    LOGGER.error("Replicate log rpc error");
                 }
             });
 
