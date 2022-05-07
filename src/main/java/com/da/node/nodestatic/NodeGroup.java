@@ -2,11 +2,19 @@ package com.da.node.nodestatic;
 
 import com.da.node.NodeId;
 
+import javax.annotation.Nonnull;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import com.da.node.RaftNode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 //集群成员映射表
 public class NodeGroup {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(RaftNode.class); // slf4j 日志
+
     private final NodeId selfId;
     private Map<NodeId, GroupMember> memberMap;
 
@@ -67,8 +75,58 @@ public class NodeGroup {
         return memberMap.size();
     }
 
+    public int getMatchIndexOfMajor() {
+        List<NodeMatchIndex> matchIndices = new ArrayList<>();
+        for (GroupMember member : memberMap.values()) {
+            if (!member.idEquals(selfId)) {
+                matchIndices.add(new NodeMatchIndex(member.getId(), member.getMatchIndex()));
+            }
+        }
+        int count = matchIndices.size();
+        // 没有节点的情况
+        if (count == 0) {
+            throw new IllegalStateException("standalone or no major node");
+        }
+        Collections.sort(matchIndices);
+        LOGGER.debug("match indices {}", matchIndices);
+        // 取排序后的中间位置的matchIndex
+        return matchIndices.get(count / 2).getMatchIndex();
+    }
+
     public NodeEndpoint getSelfEndpoint() {
         return findMember(selfId).getEndpoint();
+
+    }
+
+    /**
+     * Node match index.
+     *
+     * @see NodeGroup#getMatchIndexOfMajor()
+     */
+    private static class NodeMatchIndex implements Comparable<NodeMatchIndex> {
+
+        private final NodeId nodeId;
+        private final int matchIndex;
+
+        NodeMatchIndex(NodeId nodeId, int matchIndex) {
+            this.nodeId = nodeId;
+            this.matchIndex = matchIndex;
+        }
+
+        int getMatchIndex() {
+            return matchIndex;
+        }
+
+        @Override
+        public int compareTo(@Nonnull NodeMatchIndex o) {
+            return -Integer.compare(o.matchIndex, this.matchIndex);
+        }
+
+        @Override
+        public String toString() {
+            return "<" + nodeId + ", " + matchIndex + ">";
+        }
+
     }
 
 }

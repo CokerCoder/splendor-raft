@@ -66,4 +66,33 @@ public class ReplicatingState {
     public void setLastReplicatedAt(long lastReplicatedAt) {
         this.lastReplicatedAt = lastReplicatedAt;
     }
+
+    /**
+     * Advance next index and match index by last entry index.
+     *
+     * @param lastEntryIndex last entry index
+     * @return true if advanced, false if no change
+     */
+    public boolean advance(int lastEntryIndex) {
+        // changed
+        boolean result = (matchIndex != lastEntryIndex || nextIndex != (lastEntryIndex + 1));
+
+        matchIndex = lastEntryIndex;
+        nextIndex = lastEntryIndex + 1;
+
+        return result;
+    }
+
+    /**
+     * Back off next index, in other word, decrease.
+     *
+     * @return true if decrease successfully, false if next index is less than or equal to {@code 1}
+     */
+    public boolean backOffNextIndex() {
+        if (nextIndex > 1) {
+            nextIndex--;
+            return true;
+        }
+        return false;
+    }
 }

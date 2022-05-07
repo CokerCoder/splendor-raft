@@ -4,6 +4,8 @@ import com.da.entity.AppendEntriesRpc;
 import com.da.log.*;
 import com.da.log.entrySequence.EntrySequence;
 import com.da.node.NodeId;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import java.util.Collections;
@@ -172,6 +174,7 @@ public abstract class AbstractLog implements Log {
     private int findFirstUnmatchedLog(EntrySequenceView leaderEntries) {
         int logIndex;
         EntryMeta followerEntryMeta;
+        // 从后往前遍历leaderEntries
         for(Entry leadeEntry: leaderEntries){
             logIndex = leadeEntry.getIndex();
             //按照索引查找日志条目元信息

@@ -13,12 +13,14 @@ import java.util.List;
 //EntriesFile,EntryIndexFile 和 日志缓冲pendingEntries 构成了FileEntrySequence
 public class FileEntrySequence extends AbstractEntrySequence{
     private final EntryFactory entryFactory = new EntryFactory();
+    // 数据库表文件，使用RandomAccessFile随机访问
     private final EntriesFile entriesFile;
+    // 数据库表的索引
     private final EntryIndexFile entryIndexFile;
     private final LinkedList<Entry> pendingEntries = new LinkedList<>();
 
     //Raft算法中初始commitIndex为0
-    private int commitIndex = 0;
+    private int commitIndex;
     public FileEntrySequence(LogDir logDir, int logIndexOffset){
         super(logIndexOffset);
         try{
@@ -39,10 +41,12 @@ public class FileEntrySequence extends AbstractEntrySequence{
 
     private void initialize(){
         if(entryIndexFile.isEmpty()){
+            commitIndex = logIndexOffset - 1;
             return;
         }
         logIndexOffset = entryIndexFile.getMinEntryIndex();
         nextLogIndex = entryIndexFile.getMaxEntryIndex()+1;
+        commitIndex = entryIndexFile.getMaxEntryIndex();
     }
 
     public int getCommitIndex(){
@@ -80,6 +84,7 @@ public class FileEntrySequence extends AbstractEntrySequence{
         return result;
     }
 
+    // 获取指定位置的日志条目
     @Override
     protected Entry doGetEntry(int index) {
         if(!pendingEntries.isEmpty()){
@@ -92,6 +97,7 @@ public class FileEntrySequence extends AbstractEntrySequence{
         return getEntryInFile(index);
     }
 
+    // 获取日志元信息
     public EntryMeta getEntryMeta(int index){
         if(!isEntryPresent(index)){
             return null;
@@ -105,6 +111,7 @@ public class FileEntrySequence extends AbstractEntrySequence{
         return entryIndexFile.get(index).toEntryMeta();
     }
 
+    // 按照索引获取文件中的日志条目
     private Entry getEntryInFile(int index){
         long offset = entryIndexFile.getOffset(index);
         try{
@@ -113,7 +120,7 @@ public class FileEntrySequence extends AbstractEntrySequence{
             throw new IllegalStateException("fail to load entry "+ index, e);
         }
     }
-
+    // 获取最后一条日志
     public Entry getLastEntry(){
         if(isEmpty()){
             return null;
@@ -130,6 +137,8 @@ public class FileEntrySequence extends AbstractEntrySequence{
         pendingEntries.add(entry);
     }
 
+    // 需要判断移除的日志索引是否在日志绥冲中。如果在， 那么就只需从后往前移除日志绥冲中的部分日志即可, 否则需要整体消除 日志缓冲 ，
+    // 文件需要裁剪。
     @Override
     protected void doRemoveAfter(int index) {
         if(!pendingEntries.isEmpty() && index>=pendingEntries.getFirst().getIndex()-1){
@@ -186,7 +195,7 @@ public class FileEntrySequence extends AbstractEntrySequence{
             for(int i=pendingEntries.getFirst().getIndex(); i<=index;i++){
                 entry=pendingEntries.removeFirst();
                 offset=entriesFile.appendEntry(entry);
-                entryIndexFile.appenEntryIndex(i,offset,entry.getKind(),entry.getTerm());
+                entryIndexFile.appendEntryIndex(i,offset,entry.getKind(),entry.getTerm());
                 commitIndex = i;
             }
         }catch (IOException e){

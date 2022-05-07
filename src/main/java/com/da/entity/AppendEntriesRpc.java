@@ -4,11 +4,14 @@ import com.da.log.Entry;
 import com.da.node.NodeId;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 
 import java.util.List;
 
+
 @Setter
 @Getter
+@ToString
 public class AppendEntriesRpc {
 
     /** 当前的任期号 **/
@@ -74,8 +77,13 @@ public class AppendEntriesRpc {
         this.leaderCommit = leaderCommit;
     }
 
+    public int getLastEntryIndex() {
+        return this.entries.isEmpty() ? this.prevLogIndex : this.entries.get(this.entries.size() - 1).getIndex();
+    }
+
     public void setEntries(List<Entry> entries) {
         this.entries = entries;
     }
     
+
 }

@@ -52,18 +52,19 @@ public class MockRPCAdapter implements RPCAdapter {
 
     public static class Message {
 
-        Object rpc;
-        private NodeId destinationNodeId;
-        private Object result;
+        private Object rpc; // RPC 消息
+        private NodeId destinationNodeId; // 目标节点
+        private Object result; // 结果
+        // 获取RPC消息
 
         public Object getRpc() {
             return rpc;
         }
-
+        // 获取目标节点
         public NodeId getDestinationNodeId() {
             return destinationNodeId;
         }
-
+        // 获取结果
         public Object getResult() {
             return result;
         }
