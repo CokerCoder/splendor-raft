@@ -5,39 +5,44 @@ import java.io.*;
 public class RandomAccessFileAdapter implements SeekableFile{
     private final File file;
     private final RandomAccessFile randomAccessFile;
-
+    // 构造函数
     public RandomAccessFileAdapter(File file) throws FileNotFoundException{
         this(file, "rw");
     }
-
+    //构造函数 ， 指定模式
     public RandomAccessFileAdapter(File file, String mode) throws FileNotFoundException{
         this.file = file;
         randomAccessFile = new RandomAccessFile(file, mode);
     }
-
+    // 定位
     public void seek(long position) throws IOException{
         randomAccessFile.seek(position);
     }
-
+    //写入整数
     public void writeInt(int i)  throws IOException{
         randomAccessFile.write(i);
     }
+    //写入长整数
     public void writeLong(long l)  throws IOException{
         randomAccessFile.writeLong(l);
     }
+    //写入字节数据
     public void write(byte[] b) throws IOException {
         randomAccessFile.write(b);
     }
+    // 读取整数
     public int readInt() throws IOException {
         return randomAccessFile.readInt();
     }
+    //读取长整数
     public long readLong() throws IOException{
         return randomAccessFile.readLong();
     }
-
+    //读取字节数据 ，返回读取的字节数
     public int read(byte[] b) throws IOException {
         return randomAccessFile.read(b);
     }
+    // 获取文件大小
     public long size() throws IOException {
         return randomAccessFile.length();
     }

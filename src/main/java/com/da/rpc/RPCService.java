@@ -4,6 +4,9 @@ import com.da.entity.*;
 import com.da.node.RaftNode;
 import com.da.node.nodestatic.NodeEndpoint;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -12,6 +15,8 @@ import java.util.Map;
  * A main toolkit of RPC for a node. All RPCs should be processed via this class.
  */
 public class RPCService implements RPCAdapter {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(RPCService.class); 
 
     private RPCServer server;
     private final Map<NodeEndpoint, RPCClient> remotes;
@@ -32,6 +37,7 @@ public class RPCService implements RPCAdapter {
 
     @Override
     public RequestVoteResult requestVoteRPC(RequestVoteRpc request, NodeEndpoint destination) {
+        LOGGER.debug("Sending {} to node {}", request, destination);
         if (!remotes.containsKey(destination)) {
             RPCClient client = new RPCClient(destination.getAddress().toString());
             remotes.put(destination, client);
@@ -42,6 +48,7 @@ public class RPCService implements RPCAdapter {
 
     @Override
     public AppendEntriesResult appendEntriesRPC(AppendEntriesRpc request, NodeEndpoint destination) {
+        LOGGER.debug("Sending {} to node {}", request, destination);
         if (!remotes.containsKey(destination)) {
             RPCClient client = new RPCClient(destination.getAddress().toString());
             remotes.put(destination, client);

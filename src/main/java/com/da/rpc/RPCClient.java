@@ -5,6 +5,10 @@ import com.da.log.Entry;
 import com.da.rpc.proto.*;
 
 import com.google.protobuf.ByteString;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 
@@ -14,6 +18,8 @@ import java.util.List;
  * RPCClient is used for a node to call remote method from other nodes.
  */
 public class RPCClient {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(RPCClient.class);
 
     private final RaftGrpc.RaftBlockingStub blockingStub;
     private final ManagedChannel channel;
@@ -34,7 +40,14 @@ public class RPCClient {
                 .setLastLogIndex(request.getLastLogIndex())
                 .setLastLogTerm(request.getLastLogTerm())
                 .build();
-       RequestVoteReply reply = blockingStub.requestVote(rpcRequest);
+        
+        RequestVoteReply reply = null;
+        try {
+            reply = blockingStub.requestVote(rpcRequest);
+        } catch (Exception e) {
+            LOGGER.error("requestVote rpc error");
+        }
+       
        return new RequestVoteResult(reply.getTerm(), reply.getVoteGranted());
     }
 
@@ -58,7 +71,14 @@ public class RPCClient {
                 .setPrevLogTerm(request.getPrevLogTerm())
                 .setLeaderCommit(request.getLeaderCommit())
                 .build();
-       AppendEntriesReply reply = blockingStub.appendEntries(rpcRequest);
+
+        AppendEntriesReply reply = null;
+        try {
+            reply = blockingStub.appendEntries(rpcRequest);
+        } catch (Exception e) {
+            LOGGER.error("appendEntries rpc error");
+        }
+       
        return new AppendEntriesResult(reply.getTerm(), reply.getSuccess());
     }
 

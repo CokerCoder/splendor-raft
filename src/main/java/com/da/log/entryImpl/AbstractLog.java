@@ -4,8 +4,6 @@ import com.da.entity.AppendEntriesRpc;
 import com.da.log.*;
 import com.da.log.entrySequence.EntrySequence;
 import com.da.node.NodeId;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import java.util.Collections;
@@ -14,7 +12,7 @@ import java.util.List;
 
 
 public abstract class AbstractLog implements Log {
-    private static final Logger logger = LoggerFactory.getLogger(AbstractLog.class);
+
     protected EntrySequence entrySequence;
     protected int commitIndex = 0;
 
@@ -47,7 +45,7 @@ public abstract class AbstractLog implements Log {
         if(!entrySequence.isEmpty()){
             int maxIndex = (maxEntries==ALL_ENTRIES?
                             nextLogIndex:Math.min(nextLogIndex, nextIndex+maxEntries));
-            // rpc.setEntries(entrySequence.subList(nextIndex, maxIndex));
+            rpc.setEntries(entrySequence.subList(nextIndex, maxIndex));
         }
         return rpc;
     }
@@ -55,8 +53,6 @@ public abstract class AbstractLog implements Log {
     //用于RequestVote中投票检查isNewerThan
     public boolean isNewerThan(int lastLogIndex, int lastLogTerm){
         EntryMeta lastEntryMeta = getLastEntryMeta();
-        logger.debug("last entry({}, {}), candidate({}, {})",
-                lastLogIndex, lastLogTerm);
         return lastEntryMeta.getTerm() > lastLogTerm || lastEntryMeta.getIndex()>lastLogIndex;
     }
 
@@ -102,12 +98,10 @@ public abstract class AbstractLog implements Log {
         EntryMeta meta = entrySequence.getEntryMeta(prevLogIndex);
         //日志不存在
         if(meta==null){
-            logger.debug("previous log {} not found", prevLogIndex);
             return false;
         }
         int term = meta.getTerm();
         if(term != prevLogTerm){
-            logger.debug("different term of previous log, local {}, remote {}", term,prevLogTerm);
             return false;
         }
         return true;
@@ -178,6 +172,7 @@ public abstract class AbstractLog implements Log {
     private int findFirstUnmatchedLog(EntrySequenceView leaderEntries) {
         int logIndex;
         EntryMeta followerEntryMeta;
+        // 从后往前遍历leaderEntries
         for(Entry leadeEntry: leaderEntries){
             logIndex = leadeEntry.getIndex();
             //按照索引查找日志条目元信息
@@ -197,7 +192,6 @@ public abstract class AbstractLog implements Log {
             return;
         }
         //注意如果此处移除了已经应用的日志则需从头开始构建状态机
-        logger.debug("remove entries after {}", index);
         entrySequence.removeAfter(index);
         if(index<commitIndex){
             commitIndex = index;
@@ -208,7 +202,6 @@ public abstract class AbstractLog implements Log {
         if(leaderEntries.isEmpty()){
             return;
         }
-        logger.debug("append entries from leader from {} to {}", leaderEntries.getFirstLogIndex(), leaderEntries.getLastLogIndex());
         for(Entry leaderEntry: leaderEntries){
             entrySequence.append(leaderEntry);
         }
@@ -218,7 +211,6 @@ public abstract class AbstractLog implements Log {
         if(!validateNewCommitIndex(newCommitIndex, currenTerm)){
             return;
         }
-        logger.debug("advance commit index from {} to {}", commitIndex, newCommitIndex);
         entrySequence.commit(newCommitIndex);
         commitIndex = newCommitIndex;
     }
@@ -230,14 +222,13 @@ public abstract class AbstractLog implements Log {
         }
         EntryMeta meta = entrySequence.getEntryMeta(newCommitIndex);
         if(meta==null){
-            logger.debug("log of new commit index {} not found", newCommitIndex);
+
             return false;
         }
 
         //日志条目的term必须是当前term，才可推进commitIndex
         if(meta.getTerm()!=currentTerm){
-            logger.debug("log term of new commit index != current term {}!={}",
-                    meta.getTerm(), currentTerm);
+
             return false;
         }
         return true;

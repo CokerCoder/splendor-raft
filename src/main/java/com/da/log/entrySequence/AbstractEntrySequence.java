@@ -8,56 +8,57 @@ import java.util.Collections;
 import java.util.List;
 
 public abstract class AbstractEntrySequence implements EntrySequence{
-    int logIndexOffset;
-    int nextLogIndex;
+    int logIndexOffset; // 索引偏移量
+    int nextLogIndex; // 下一条日志的索引
 
     AbstractEntrySequence(int logIndexOffset){
         this.logIndexOffset = logIndexOffset;
         this.nextLogIndex = logIndexOffset;
     }
-
+    // 判断是否为空
     public boolean isEmpty(){
         return logIndexOffset==nextLogIndex;
     }
-
+    // 获取第一条日志的索引，为空的话抛错
     public int getFirstLogIndex(){
         if(isEmpty()){
             throw new IllegalStateException("No Log index");
         }
         return doGetFirstLogIndex();
     }
-
+    //藐取日志索引偏移
     int doGetFirstLogIndex(){return logIndexOffset;}
-
+    //获取最后一条日志的索引 ，为空的话抛锚
     public int getLastLogIndex(){
         if(isEmpty()){
             throw new IllegalStateException("No Log index");
         }
         return doGetLastLogIndex();
     }
-
+    //获取最后一条日志的索引
     int doGetLastLogIndex(){return nextLogIndex-1;}
-
+    //获取下一条日志的索引
     public int getNextLogIndex(){
         return nextLogIndex;
     }
-
+    // 判断日志条目是否存在
     public boolean isEntryPresent(int index){
         return !isEmpty() && index>=doGetFirstLogIndex() && index<=doGetLastLogIndex();
     }
-
+    // 藐取指定索引的日志条目
     public Entry getEntry(int index){
         if(!isEntryPresent(index)){
             return null;
         }
         return doGetEntry(index);
     }
-
+    //获取指定索引的日志条目元信息
     public EntryMeta getEntryMeta(int index){
         Entry entry = getEntry(index);
         return entry!=null?entry.getMeta():null;
     }
 
+    //获取最后一条 日志条目
     public Entry getLastEntry(){
         return isEmpty() ?null:doGetEntry(doGetLastLogIndex());
     }
@@ -87,6 +88,13 @@ public abstract class AbstractEntrySequence implements EntrySequence{
 
     protected abstract List<Entry> doSubList(int fromIndex, int toIndex);
 
+    @Override
+    public List<Entry> subView(int fromIndex) {
+        if (isEmpty() || fromIndex > doGetLastLogIndex()) {
+            return Collections.emptyList();
+        }
+        return subList(Math.max(fromIndex, doGetFirstLogIndex()), nextLogIndex);
+    }
 
     //追加单条日志
     public void append(Entry entry) {

@@ -3,7 +3,12 @@ package com.da.node.roles;
 import com.da.node.NodeId;
 import com.da.scheduler.ElectionTimeoutTask;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class FollowerNodeRole extends AbstractNodeRole {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(FollowerNodeRole.class);
 
     private final NodeId votedFor;
     private final NodeId leaderId;
@@ -27,6 +32,7 @@ public class FollowerNodeRole extends AbstractNodeRole {
 
     @Override
     public void cancelTimeoutOrTask() {
+        LOGGER.debug("Follower election timeout task cancelled.");
         electionTimeout.cancel();
     }
 

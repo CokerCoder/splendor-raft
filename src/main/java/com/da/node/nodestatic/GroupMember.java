@@ -10,6 +10,7 @@ import com.da.node.NodeId;
  * (2) ReplicationState:复制进度，包含nextIndex and matchIndex
  */
 public class GroupMember {
+
     private final NodeEndpoint endpoint;
     private ReplicatingState replicatingState;
 
@@ -28,27 +29,46 @@ public class GroupMember {
         return endpoint;
     }
 
-
     public ReplicatingState getReplicatingState() {
         return replicatingState;
     }
 
+    public void setReplicatingState(ReplicatingState replicatingState) {
+        this.replicatingState = replicatingState;
+    }
+
     private ReplicatingState ensureReplicatingState(){
-        if(replicatingState==null){
+        if (replicatingState==null) {
             throw new IllegalStateException("Replication state not set yet!");
         }
         return replicatingState;
     }
 
-    int getNextIndex(){ return ensureReplicatingState().getNextIndex(); }
+    public int getNextIndex() { return ensureReplicatingState().getNextIndex(); }
 
-    int getMatchIndex(){return ensureReplicatingState().getMatchIndex();}
+    public int getMatchIndex() { return ensureReplicatingState().getMatchIndex(); }
+
+    public boolean advanceReplicatingState(int lastEntryIndex) {
+        return ensureReplicatingState().advance(lastEntryIndex);
+    }
 
     public boolean idEquals(NodeId id) {
         return id.equals(endpoint.getId());
     }
 
-    public NodeId getId(){
+    public NodeId getId() {
         return endpoint.getId();
+    }
+
+    public boolean backoffNextIndex () {
+        return ensureReplicatingState().backOffNextIndex();
+    }
+
+    @Override
+    public String toString () {
+        return "GroupMember{" +
+                "endpoint=" + endpoint +
+                ", replicatingState=" + replicatingState +
+                '}';
     }
 }
