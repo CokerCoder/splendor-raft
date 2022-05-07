@@ -19,4 +19,11 @@ public class RequestVoteResult {
         return voteGranted;
     }
 
+    @Override
+    public String toString() {
+        return "RequestVoteResult{" + "term=" + term +
+                ", voteGranted=" + voteGranted +
+                '}';
+    }
+
 }

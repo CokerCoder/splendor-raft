@@ -1,5 +1,6 @@
 package com.da.node.nodestatic;
 
+import com.da.log.ReplicatingState;
 import com.da.node.NodeId;
 
 import javax.annotation.Nonnull;
@@ -96,6 +97,14 @@ public class NodeGroup {
     public NodeEndpoint getSelfEndpoint() {
         return findMember(selfId).getEndpoint();
 
+    }
+
+    public void resetReplicatingStates(int nextLogIndex) {
+        for (GroupMember member : memberMap.values()) {
+            if (!member.idEquals(selfId)) {
+                member.setReplicatingState(new ReplicatingState(nextLogIndex));
+            }
+        }
     }
 
     /**

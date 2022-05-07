@@ -35,7 +35,7 @@ message AppendEntriesRequest {
     bytes data = 4;
   }
   
-  repeated Entry entries = 7;
+  repeated Entry entries = 6;
 }
 
 message AppendEntriesReply {

@@ -1,8 +1,6 @@
 package com.da.node;
 
 import com.da.log.Log;
-import com.google.common.eventbus.EventBus;
-
 import com.da.executor.TaskExecutor;
 import com.da.node.nodestatic.NodeGroup;
 import com.da.rpc.RPCAdapter;
@@ -20,9 +18,7 @@ public class NodeContext {
 
     private RPCAdapter rpcAdapter; // RPC组件
     private Scheduler scheduler; // 定时器组件
-    private EventBus eventBus;
     private TaskExecutor taskExecutor; // 主线程存储器
-    private NodeStore store; // 部分角色状态数据存储
 
     public NodeId selfId() {
         return selfId;
@@ -44,24 +40,12 @@ public class NodeContext {
         return scheduler;
     }
 
-    public NodeStore store() {
-        return store;
-    }
-
-    public EventBus eventBus() {
-        return eventBus;
-    }
-
     public RPCAdapter rpcAdapter() {
         return rpcAdapter;
     }
 
     public void setGroup(NodeGroup group) {
         this.group = group;
-    }
-
-    public void setEventBus(EventBus eventBus) {
-        this.eventBus = eventBus;
     }
 
     public void setScheduler(Scheduler scheduler) {
@@ -74,10 +58,6 @@ public class NodeContext {
 
     public void setTaskExecutor(TaskExecutor taskExecutor) {
         this.taskExecutor = taskExecutor;
-    }
-
-    public void setStore(NodeStore store) {
-        this.store = store;
     }
 
     public Log log() {

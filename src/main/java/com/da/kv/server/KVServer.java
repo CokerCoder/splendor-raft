@@ -14,11 +14,16 @@ import com.da.rpc.proto.SetRequest;
 import com.da.rpc.proto.SetResponse;
 import com.google.protobuf.ByteString;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import io.grpc.stub.StreamObserver;
 
 public class KVServer {
+
+    private static final Logger logger = LoggerFactory.getLogger(KVServer.class);
 
     private RaftNode node;
     private int port;
@@ -36,7 +41,7 @@ public class KVServer {
     }
 
     public void start() throws IOException {
-        System.out.println("Start kv server at port " + port);
+        logger.info("Raft KV server started at port {}.", this.port);
 
         this.node.start(); // raft node
         this.server.start(); // kv server

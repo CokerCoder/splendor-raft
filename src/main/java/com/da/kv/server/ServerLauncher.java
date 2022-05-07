@@ -127,8 +127,6 @@ public class ServerLauncher {
             throw new IllegalArgumentException("group-config required");
         }
 
-        System.out.println("Started as group member checkpoint");
-
         String[] rawGroupConfig = cmdLine.getOptionValues("gc");
         String rawNodeId = cmdLine.getOptionValue('i');
         int portService = ((Long) cmdLine.getParsedOptionValue("p2")).intValue();
@@ -139,7 +137,7 @@ public class ServerLauncher {
 
         Node node = new NodeBuilder(nodeEndpoints, new NodeId(rawNodeId))
                 // .setDataDir(cmdLine.getOptionValue('d'))
-                .setScheduler(new DefaultScheduler(3000, 4000, 0, 1000))
+                .setScheduler(new DefaultScheduler(5000, 10000, 500, 1000))
                 .build();
         ((RaftNode) node).getContext().setRPCAdapter(new RPCService((RaftNode) node));
 

@@ -43,5 +43,15 @@ public class RequestVoteRpc {
     public void setLastLogTerm(int lastLogTerm) {
         this.lastLogTerm = lastLogTerm;
     }
+
+    @Override
+    public String toString() {
+        return "RequestVoteRpc{" +
+                "candidateId=" + candidateId +
+                ", lastLogIndex=" + lastLogIndex +
+                ", lastLogTerm=" + lastLogTerm +
+                ", term=" + term +
+                '}';
+    }
     
 }

@@ -4,8 +4,6 @@ import com.da.entity.AppendEntriesRpc;
 import com.da.log.*;
 import com.da.log.entrySequence.EntrySequence;
 import com.da.node.NodeId;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import java.util.Collections;
@@ -47,7 +45,7 @@ public abstract class AbstractLog implements Log {
         if(!entrySequence.isEmpty()){
             int maxIndex = (maxEntries==ALL_ENTRIES?
                             nextLogIndex:Math.min(nextLogIndex, nextIndex+maxEntries));
-            // rpc.setEntries(entrySequence.subList(nextIndex, maxIndex));
+            rpc.setEntries(entrySequence.subList(nextIndex, maxIndex));
         }
         return rpc;
     }

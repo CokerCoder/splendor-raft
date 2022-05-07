@@ -1,5 +1,8 @@
 package com.da.node;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
@@ -20,34 +23,26 @@ import com.da.node.roles.CandidateNodeRole;
 import com.da.node.roles.FollowerNodeRole;
 import com.da.node.roles.LeaderNodeRole;
 import com.da.node.roles.RoleName;
-import com.da.rpc.messages.AppendEntriesResultMessage;
 import com.da.scheduler.ElectionTimeoutTask;
 import com.da.scheduler.LogReplicationTask;
-import com.google.common.eventbus.Subscribe;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 
 public class RaftNode implements Node {
-
+    
     private static final Logger LOGGER = LoggerFactory.getLogger(RaftNode.class); // slf4j 日志
+    
+    private boolean started; //是否已经启动
+    private final NodeContext context; // 核心上下文组件
+    private volatile AbstractNodeRole role; // 当前的角色与信息
     private StateMachine stateMachine;
 
-    private final NodeContext context; // 核心上下文组件
-    private boolean started; //是否已经启动
-    private volatile AbstractNodeRole role; // 当前的角色与信息
+    RaftNode(NodeContext context) {
+        this.context = context;
+    }
 
     // 获取当前角色
     public AbstractNodeRole getRole() {
         return role;
-    }
-
-
-    RaftNode(NodeContext context) {
-        this.context = context;
     }
 
     // 获取核心组件上下文
@@ -55,36 +50,34 @@ public class RaftNode implements Node {
         return context;
     }
 
-    /**
-     * 系统启动时，在EventBus中注册自己感兴趣的消息，以及初始化RPC组件，切换角色为Follower, 并且设置选举超时
-     */
     @Override
     public synchronized void start() {
+
         // 如果已经启动则直接跳过
         if (started) {
-            logger.info("Node {} has already started, return.", this);
+            // logger.info("Node {} has already started, return.", this);
             return;
         }
-        context.eventBus().register(this);
+
         context.rpcAdapter().listen(context.group().getSelfEndpoint().getAddress().getPort());
 
         // load term, votedFor from store and become follower
-        NodeStore store = context.store();
-        changeToRole(new FollowerNodeRole(store.getTerm(), store.getVotedFor(), null, scheduleElectionTimeout()));
+        changeToRole(new FollowerNodeRole(0, null, null, scheduleElectionTimeout()));
         started = true;
+
     }
 
     
     public void electionTimeout() {
-        // context.taskExecutor().submit(this::doProcessElectionTimeout);
+        LOGGER.debug("Node {} triggered election timeout", context.selfId());
+        context.taskExecutor().submit(this::doProcessElectionTimeout);
         // blocking method 
-        System.out.println("Triggered electionTimeout");
-        doProcessElectionTimeout();;
+        // doProcessElectionTimeout();;
     }
 
     private void doProcessElectionTimeout() {
         if (role.getName() == RoleName.LEADER) {
-            LOGGER.debug("node {}, current role is leader, ignore election timeout", context.selfId());
+            LOGGER.debug("Current is leader, ignore election timeout", context.selfId());
             return;
         }
         // follower: start election
@@ -92,7 +85,7 @@ public class RaftNode implements Node {
         // increase the term
         int newTerm = role.getTerm() + 1;
         role.cancelTimeoutOrTask();
-        LOGGER.debug("start election");
+        LOGGER.debug("Node {} start election, term {}", context.selfId(), newTerm);
         // 变成candidate 角色
         changeToRole(new CandidateNodeRole(newTerm, scheduleElectionTimeout()));
 
@@ -103,7 +96,6 @@ public class RaftNode implements Node {
         rpc.setCandidateId(context.selfId());
         rpc.setLastLogIndex(lastEntryMeta.getIndex());
         rpc.setLastLogTerm(lastEntryMeta.getTerm());
-        // context.rpcAdapter().sendRequestVote(rpc, context.group().listEndPointExceptSelf());
 
         // Blocking
         Set<NodeEndpoint> destinations = context.group().listEndPointExceptSelf();
@@ -132,20 +124,12 @@ public class RaftNode implements Node {
         //     logger.info("current leader is {}, term {}", leaderId, term);
         // }
         // 重新创建选举超时定时器
-        ElectionTimeoutTask electionTimeout = scheduleElectionTimeout();
+        ElectionTimeoutTask electionTimeout = scheduleElectionTimeout ? scheduleElectionTimeout() : ElectionTimeoutTask.NONE;
         changeToRole(new FollowerNodeRole(term, votedFor, leaderId, electionTimeout));
     }
 
     private void changeToRole(AbstractNodeRole newRole) {
-        LOGGER.debug("node {}, role state changed -> {}", context.selfId(), newRole);
-
-        NodeStore store = context.store();
-        store.setTerm(newRole.getTerm());
-        if (newRole.getName() == RoleName.FOLLOWER) {
-            store.setVotedFor(((FollowerNodeRole)newRole).getVotedFor());
-        }
-        logger.debug("Node {} changed from {} to {}.", this, role, newRole);
-        System.out.println(String.format("Node %s changed from %s to %s.", this, role, newRole));
+        LOGGER.debug("Node {}, role state changed -> {}, current term: {}", context.selfId(), newRole, newRole.getTerm());
         role = newRole;
     }
 
@@ -159,7 +143,7 @@ public class RaftNode implements Node {
 
 
     public RequestVoteResult onReceiveRequestVoteRpc(RequestVoteRpc rpc) {
-        System.out.println("Received requestVoteRpc");
+        LOGGER.debug("Node {} received {} from node {}", context.selfId(), rpc, rpc.getCandidateId());
         // return (RequestVoteResult) context.taskExecutor().submit(
         //     () -> doProcessRequestVoteRpc(rpc));
         return doProcessRequestVoteRpc(rpc);
@@ -168,11 +152,10 @@ public class RaftNode implements Node {
     private RequestVoteResult doProcessRequestVoteRpc(RequestVoteRpc rpc) {
 
         if (rpc.getTerm() < role.getTerm()) {
-            LOGGER.debug("term from rpc < current term, don't vote ({} <- {})",
+            LOGGER.debug("Term from rpc < current term, don't vote ({} <- {})",
                         rpc.getTerm(), role.getTerm());
             return new RequestVoteResult(role.getTerm(), false);
         }
-        // 此处无条件投票
 
         boolean voteForCandidate = !context.log().isNewerThan(rpc.getLastLogIndex(), rpc.getLastLogTerm());
 
@@ -207,15 +190,12 @@ public class RaftNode implements Node {
 
 
     public void onReceiveRequestVoteResult(RequestVoteResult result) {
-        context.taskExecutor().submit(() -> doProcessRequestVoteResult(result));
-        // doProcessRequestVoteResult(result);
+        LOGGER.debug("Node {} received {}", context.selfId(), result);
+        // context.taskExecutor().submit(() -> doProcessRequestVoteResult(result));
+        doProcessRequestVoteResult(result);
     }
 
     private void doProcessRequestVoteResult(RequestVoteResult result) {
-
-        if (result == null) {
-            return;
-        }
 
         // step down if result's term is larger than current term
         // 如果对象的term比自己大，则退化为follower角色
@@ -227,7 +207,7 @@ public class RaftNode implements Node {
         // check role
         // 如果自己不是Candidate角色，那么忽略
         if (role.getName() != RoleName.CANDIDATE) {
-            LOGGER.debug("reveive request vote result and current role is not candidate, ignore");
+            LOGGER.debug("Reveived request vote result and current role is not candidate, ignore");
             return;
         }
 
@@ -237,16 +217,18 @@ public class RaftNode implements Node {
         }
 
         // 当前票数
-        int currentVotesCount = ((CandidateNodeRole) role).getVotesCount() + 1;
+        int currentVotesCount = ((CandidateNodeRole) role).getVotesCount();
+        currentVotesCount = result.isVoteGranted() ? currentVotesCount + 1 :currentVotesCount;
+
         // 节点数
         int countOfMajor = context.group().getCount();
-        LOGGER.debug("votes count {}, node count", currentVotesCount, countOfMajor);
+        LOGGER.debug("Votes count {}, node count {}", currentVotesCount, countOfMajor);
         // 取消选举超时定时器
         role.cancelTimeoutOrTask();
 
         if (currentVotesCount > countOfMajor / 2) {  // 票数过半
+            resetReplicatingStates();
             // become leader
-            LOGGER.debug("become leader, term {}", role.getTerm());
             changeToRole(new LeaderNodeRole(role.getTerm(), scheduleLogReplicationTask()));
 
 
@@ -264,15 +246,17 @@ public class RaftNode implements Node {
      */
     public void replicateLog() {
 
-        //context.taskExecutor().submit(this::doReplicateLog);
+        System.out.println("replicate log here");
 
-        // context.taskExecutor().submit(this::doReplicateLog);
+        // context.taskExecutor().submit(this::doReplicateLogAll);
 
-        doReplicateLog();
+        doReplicateLogAll();
     }
 
-    private void doReplicateLog() {
-        LOGGER.debug("replicate log");
+    private void doReplicateLogAll() {
+
+        LOGGER.debug("Replication target group: {}", context.group().listReplicationTarget());
+
         for (GroupMember member : context.group().listReplicationTarget()) {
             // todo: can be wrong
             doReplicateLog(member, Log.ALL_ENTRIES);
@@ -280,31 +264,53 @@ public class RaftNode implements Node {
         }
     }
 
-    // todo
     private void doReplicateLog(GroupMember member, int maxEntries) {
+
+        System.out.println("here");
+        System.out.println("here2");
         // AppendEntriesRpc rpc = new AppendEntriesRpc();
+        // rpc.setLeaderId(member.getId());
+        // rpc.setTerm(0);
         // set appendEntries attributes
         AppendEntriesRpc rpc = context.log().createAppendEntriesRpc(role.getTerm(), context.selfId(), member.getNextIndex(), maxEntries);
+
+        System.out.println("here3");
+        System.out.println("here4");
+        System.out.println("here5");
+        System.out.println("here6");
+        LOGGER.debug("About to send {}", rpc);
 
         // send to all endpoints except self the AppendEntriesRpc using 
         // the single thread executor
         final Future<AppendEntriesResult> future = context.taskExecutor().submit(
             () -> context.rpcAdapter().appendEntriesRPC(rpc, member.getEndpoint()));
-        // try get the appendEntriesResult with a seperate runnable task
-//        context.taskExecutor().submit(
-//            () -> {
-//                try {
-//                    onReceiveAppendEntriesResult(future.get());
-//                } catch (InterruptedException | ExecutionException e) {
-//                    e.printStackTrace();
-//                }
-//            });
+        try {
+            onReceiveAppendEntriesResult(future.get(), rpc);
+        } catch (InterruptedException e1) {
+            // TODO Auto-generated catch block
+            e1.printStackTrace();
+        } catch (ExecutionException e1) {
+            // TODO Auto-generated catch block
+            e1.printStackTrace();
+        }
+
+        // // try get the appendEntriesResult with a seperate runnable task
+        // context.taskExecutor().submit(
+        //     () -> {
+        //         try {
+        //             // with the associated rpc
+        //             onReceiveAppendEntriesResult(future.get(), rpc);
+        //         } catch (InterruptedException | ExecutionException e) {
+        //             e.printStackTrace();
+        //         }
+        //     });
 
     }
 
 
 
     public AppendEntriesResult onReceiveAppendEntriesRpc(AppendEntriesRpc rpc) {
+        LOGGER.debug("Node {} received {} from node {}", context.selfId(), rpc, rpc.getLeaderId());
         // context.taskExecutor().submit(() ->
         //                 context.rpcAdapter().replyAppendEntries(doProcessAppendEntriesRpc(rpcMessage), 
         
@@ -355,10 +361,9 @@ public class RaftNode implements Node {
     }
 
 
-    // TODO:
     private boolean appendEntries(AppendEntriesRpc rpc) {
         boolean result = context.log().appendEntriesFromLeader(rpc.getPrevLogIndex(),
-        rpc.getPrevLogTerm(), rpc.getEntries());
+            rpc.getPrevLogTerm(), rpc.getEntries());
 
         if (result) {
             context.log().advanceCommitIndex(
@@ -368,15 +373,15 @@ public class RaftNode implements Node {
     }
 
 
-    @Subscribe
-    public void onReceiveAppendEntriesResult(AppendEntriesResultMessage resultMessage) {
-        context.taskExecutor().submit(() -> doProcessAppendEntriesResult(resultMessage));
+    public void onReceiveAppendEntriesResult(AppendEntriesResult result, AppendEntriesRpc rpc) {
+        LOGGER.debug("Node {} received {} from node {}", context.selfId(), result, rpc.getLeaderId());
+        
+        context.taskExecutor().submit(() -> doProcessAppendEntriesResult(result, rpc));
         // doProcessAppendEntriesResult(result);
     }
 
 
-    private void doProcessAppendEntriesResult(AppendEntriesResultMessage resultMessage) {
-        AppendEntriesResult result = resultMessage.get();
+    private void doProcessAppendEntriesResult(AppendEntriesResult result, AppendEntriesRpc rpc) {
 
         if (result == null) {
             return;
@@ -391,18 +396,19 @@ public class RaftNode implements Node {
 
         // check role
         if (role.getName() != RoleName.LEADER) {
-            LOGGER.debug("reveive append entries result from node {} but current node is not leader, ignore", resultMessage.getSourceNodeId());
+            LOGGER.debug("reveive append entries result from node {} but current node is not leader, ignore", rpc.getLeaderId());
             return;
         }
 
-        NodeId sourceNodeId = resultMessage.getSourceNodeId();
+        NodeId sourceNodeId = rpc.getLeaderId();
+
         GroupMember member = context.group().getMember(sourceNodeId);
         // 没有指定的成员
         if (member == null) {
             LOGGER.debug("unexpected append entries result from node {}, node maybe removed", sourceNodeId);
             return;
         }
-        AppendEntriesRpc rpc = resultMessage.getRpc();
+
         if (result.isSuccess()) {
             // 回复成功
             // 推进matchIndex和nextIndex
@@ -430,8 +436,6 @@ public class RaftNode implements Node {
         context.scheduler().stop();
         // 关闭RPC连接器
         context.rpcAdapter().close();
-        //
-        context.store().close();
         // 关闭任务执行器
         context.taskExecutor().shutdown();
         started = false;
@@ -440,6 +444,10 @@ public class RaftNode implements Node {
     @Override
     public void registerStateMachine(KVService service) {
         this.stateMachine = service;
+    }
+
+    private void resetReplicatingStates() {
+        context.group().resetReplicatingStates(context.log().getNextIndex());
     }
 
     public void appendLog(byte[] bytes) {

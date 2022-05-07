@@ -2,16 +2,10 @@
 package com.da.entity;
 import com.da.log.Entry;
 import com.da.node.NodeId;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
 
+import java.util.ArrayList;
 import java.util.List;
 
-
-@Setter
-@Getter
-@ToString
 public class AppendEntriesRpc {
 
     /** 当前的任期号 **/
@@ -27,7 +21,7 @@ public class AppendEntriesRpc {
     private int prevLogTerm;
 
     /** 准备存储的日志条目（表示心跳时为空；可以一次性发送多个） */
-    private List<Entry> entries;
+    private List<Entry> entries = new ArrayList<>();
 
     /** 领导人已经提交的日志的索引值  */
     private int leaderCommit;
@@ -85,5 +79,16 @@ public class AppendEntriesRpc {
         this.entries = entries;
     }
     
+    @Override
+    public String toString() {
+        return "AppendEntriesRpc{" +
+                "entries.size=" + entries.size() +
+                ", leaderCommit=" + leaderCommit +
+                ", leaderId=" + leaderId +
+                ", prevLogIndex=" + prevLogIndex +
+                ", prevLogTerm=" + prevLogTerm +
+                ", term=" + term +
+                '}';
+    }
 
 }

@@ -43,4 +43,12 @@ public class AppendEntriesResult {
 //    public static AppendEntriesResult succeed() {
 //        return new AppendEntriesResult(true);
 //    }
+
+    @Override
+    public String toString() {
+        return "AppendEntriesResult{" +
+                "success=" + success +
+                ", term=" + term +
+                '}';
+    }
 }

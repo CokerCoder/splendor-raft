@@ -23,4 +23,9 @@ public class NodeEndpoint {
     public Address getAddress() {
         return address;
     }
+
+    @Override
+    public String toString() {
+        return "NodeEndpoint{id=" + id + ", address=" + address + '}';
+    }
 }

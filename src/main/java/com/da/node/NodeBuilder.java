@@ -12,7 +12,6 @@ import com.da.node.nodestatic.NodeGroup;
 import com.da.rpc.RPCAdapter;
 import com.da.scheduler.NullScheduler;
 import com.da.scheduler.Scheduler;
-import com.google.common.eventbus.EventBus;
 
 public class NodeBuilder {
 
@@ -25,11 +24,6 @@ public class NodeBuilder {
      * Self id.
      */
     private final NodeId selfId;
-
-    /**
-     * Event bus, INTERNAL.
-     */
-    private final EventBus eventBus;
 
     /**
      * Scheduler, INTERNAL.
@@ -46,9 +40,9 @@ public class NodeBuilder {
      */
     private TaskExecutor taskExecutor = null;
 
+
     private Log log = null;
 
-    private NodeStore nodeStore = null;
 
     // 单节点构造函数
     public NodeBuilder(NodeEndpoint endpoint) {
@@ -59,7 +53,6 @@ public class NodeBuilder {
     public NodeBuilder(Collection<NodeEndpoint> endpoints, NodeId selfId) {
         this.group = new NodeGroup(endpoints, selfId);
         this.selfId = selfId;
-        this.eventBus = new EventBus(selfId.getValue());
     }
 
     // 设置通信组件
@@ -80,11 +73,6 @@ public class NodeBuilder {
         return this;
     }
 
-    public NodeBuilder setNodeStore(NodeStore nodeStore) {
-        this.nodeStore = nodeStore;
-        return this;
-    }
-
     // 构建node实例
     public Node build() {
         return new RaftNode(buildContext());
@@ -93,10 +81,8 @@ public class NodeBuilder {
     //构建上下文
     private NodeContext buildContext() {
         NodeContext context = new NodeContext();
-        context.setStore(nodeStore != null ? nodeStore : new MemoryNodeStore());
         context.setGroup(group);
         context.setSelfId(selfId);
-        context.setEventBus(eventBus);
         context.setScheduler(scheduler != null ? scheduler : new NullScheduler());
         context.setRPCAdapter(connector);
         context.setTaskExecutor(taskExecutor != null ? taskExecutor : new SingleThreadTaskExecutor());
