@@ -20,19 +20,19 @@ public class EntryIndexItem {
         this.term = term;
     }
 
-    int getIndex() {
+    public int getIndex() {
         return index;
     }
 
-    long getOffset() {
+    public long getOffset() {
         return offset;
     }
 
-    int getKind() {
+    public int getKind() {
         return kind;
     }
 
-    int getTerm() {
+    public int getTerm() {
         return term;
     }
 

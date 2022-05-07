@@ -73,7 +73,7 @@ public class RPCServer {
         @Override
         public void appendEntries(AppendEntriesRequest request, StreamObserver<AppendEntriesReply> responseObserver) {
             List<Entry> entries = new ArrayList<>(request.getEntriesCount());
-            if (request.getEntriesList().get(0).getKind() == Entry.KIND_NO_OP) {
+            if (entries.size() > 0 && request.getEntriesList().get(0).getKind() == Entry.KIND_NO_OP) {
                 AppendEntriesRequest.Entry rpcEntry = request.getEntriesList().get(0);
                 Entry entry = new GeneralEntry(rpcEntry.getIndex(), rpcEntry.getTerm(), rpcEntry.toByteArray());
                 entries.add(entry);

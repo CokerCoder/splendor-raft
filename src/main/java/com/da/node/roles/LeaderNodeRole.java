@@ -2,7 +2,12 @@ package com.da.node.roles;
 
 import com.da.scheduler.LogReplicationTask;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class LeaderNodeRole extends AbstractNodeRole {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(LeaderNodeRole.class);
 
     // differ from follower/candidate, leader does not have electionTimeout task
     // rather, a log replication task
@@ -15,6 +20,7 @@ public class LeaderNodeRole extends AbstractNodeRole {
 
     @Override
     public void cancelTimeoutOrTask() {
+        LOGGER.debug("Leader replicate log task cancelled.");
         logReplicationTask.cancel();
     }
 

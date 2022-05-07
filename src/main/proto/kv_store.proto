@@ -1,0 +1,44 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "com.da.rpc.proto";
+option java_outer_classname = "KVProto";
+
+service KV {
+    rpc GetKey(GetRequest) returns (GetResponse) {}
+
+    rpc SetKey(SetRequest) returns (SetResponse) {}
+}
+
+message Redirect {
+    string leader_id = 1;
+}
+
+message Success {}
+
+message Failure {
+    int32 error_code = 1;
+    string message = 2;
+}
+
+message SetRequest {
+    string request_id = 1;
+    string key = 2;
+    bytes value = 3;
+}
+
+message GetRequest {
+    string key = 1;
+}
+
+message GetResponse {
+    bool found = 1;
+    bytes value = 2;
+}
+
+message SetResponse {
+    bool success = 1;
+    int32 error_code = 2;
+    string error_message = 3;
+    string leader_id = 4;
+}

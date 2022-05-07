@@ -243,7 +243,7 @@ public class RequestVoteTest {
         Assert.assertTrue(node.getRole() instanceof LeaderNodeRole);
 
         node.replicateLog();
-        node.onReceiveAppendEntriesResult(new AppendEntriesResult(1, true));
+        // node.onReceiveAppendEntriesResult(new AppendEntriesResult(1, true));
     }
     
 
