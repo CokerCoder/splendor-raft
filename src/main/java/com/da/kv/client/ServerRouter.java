@@ -5,6 +5,8 @@ import com.da.kv.messages.GetCommandResponse;
 import com.da.kv.messages.SetCommand;
 import com.da.kv.messages.SetCommandResponse;
 import com.da.node.NodeId;
+import com.da.node.nodestatic.Address;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,6 +18,9 @@ import java.util.*;
 public class ServerRouter {
 
     private static final Logger logger = LoggerFactory.getLogger(ServerRouter.class);
+    
+    protected final Map<NodeId, Address> serverAddresses = new HashMap<>();
+
     private final Map<NodeId, RPCChannel> availableServers = new HashMap<>();
     private NodeId leaderId;
 
@@ -26,7 +31,7 @@ public class ServerRouter {
 
     public void set(String key, byte[] value) {
         SetCommandResponse response = availableServers.get(leaderId).set(new SetCommand(key, value));
-        while (response.getLeaderId() != null) { // TODO
+        while (response.getLeaderId() != null) {
             // currently no leader, electing
             if (response.getLeaderId().isEmpty()) {
                 System.out.println("Server temporarily unavailable, please try again.");
@@ -39,7 +44,7 @@ public class ServerRouter {
                 response = leaderChannel.set(new SetCommand(key, value));
             }
         }
-        if (response.getErrorMessage() != null) { // TODO
+        if (response.getErrorMessage() != null) {
             logger.error(response.getErrorMessage());
         }
     }
@@ -55,6 +60,13 @@ public class ServerRouter {
     public void close() {
         for (RPCChannel channel : availableServers.values()) {
             channel.close();
+        }
+    }
+
+    void printSeverList() {
+        for (NodeId nodeId : serverAddresses.keySet()) {
+            Address address = serverAddresses.get(nodeId);
+            System.out.println(nodeId + "," + address.getHost() + "," + address.getPort());
         }
     }
 }

@@ -2,7 +2,6 @@ package com.da.log.entrySequence;
 
 import com.da.log.Entry;
 import com.da.log.EntryMeta;
-import com.da.log.LogEntry;
 
 import java.util.List;
 

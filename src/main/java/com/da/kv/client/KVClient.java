@@ -15,7 +15,6 @@ import org.jline.terminal.TerminalBuilder;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -38,6 +37,10 @@ public class KVClient {
         buildServerRouter(nodes);
         int status = 0;
         System.out.println("Start the splendor-raft console!");
+        System.out.println("******************************");
+        System.out.println("Current server list:");
+        serverRouter.printSeverList();
+        System.out.println("******************************");
         String prompt = "splendor-raft> ";
 
         while (status == 0) {
@@ -55,6 +58,7 @@ public class KVClient {
             String[] info = node.split(",");
             try {
                 Address address = new Address(info[1], Integer.parseInt(info[2]));
+                serverRouter.serverAddresses.put(new NodeId(info[0]), address);
                 serverRouter.add(new NodeId(info[0]), new RPCChannel(address.toString()));
             } catch (NumberFormatException e) {
                 System.out.printf("Invalid port: %s\n", node);

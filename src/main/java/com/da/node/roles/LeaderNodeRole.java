@@ -24,4 +24,10 @@ public class LeaderNodeRole extends AbstractNodeRole {
         logReplicationTask.cancel();
     }
 
+
+    @Override
+    public String toString() {
+        return "LeaderNodeRole{term=" + term + ", logReplicationTask=" + logReplicationTask + '}';
+    }
+
 }

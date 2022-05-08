@@ -36,4 +36,15 @@ public class FollowerNodeRole extends AbstractNodeRole {
         electionTimeout.cancel();
     }
 
+
+    @Override
+    public String toString() {
+        return "FollowerNodeRole{" +
+                "term=" + term +
+                ", leaderId=" + leaderId +
+                ", votedFor=" + votedFor +
+                ", electionTimeout=" + electionTimeout +
+                '}';
+    }
+
 }
