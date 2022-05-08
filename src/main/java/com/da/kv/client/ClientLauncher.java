@@ -17,8 +17,8 @@ public class ClientLauncher {
         CommandLineParser parser = new DefaultParser();
         try {
             CommandLine cmdLine = parser.parse(options, args);
-            String addresses = cmdLine.getOptionValue("gc");
-            kvClient.start(addresses.split(" "));
+            String[] addresses = cmdLine.getOptionValues("gc");
+            kvClient.start(addresses);
         } catch (ParseException | IllegalArgumentException e) {
             System.err.println(e.getMessage());
         }

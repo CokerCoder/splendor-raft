@@ -38,7 +38,7 @@ public class KVClient {
         buildServerRouter(nodes);
         int status = 0;
         System.out.println("Start the splendor-raft console!");
-        String prompt = "Splendor-raft>";
+        String prompt = "splendor-raft> ";
 
         while (status == 0) {
             String line;
