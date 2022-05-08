@@ -12,10 +12,9 @@ import com.da.entity.AppendEntriesResult;
 import com.da.entity.AppendEntriesRpc;
 import com.da.entity.RequestVoteResult;
 import com.da.entity.RequestVoteRpc;
-import com.da.kv.server.KVService;
-import com.da.log.StateMachine;
 import com.da.log.EntryMeta;
 import com.da.log.Log;
+import com.da.log.stateMachine.StateMachine;
 import com.da.node.nodestatic.GroupMember;
 import com.da.node.nodestatic.NodeEndpoint;
 import com.da.node.roles.AbstractNodeRole;
@@ -34,6 +33,7 @@ public class RaftNode implements Node {
     private boolean started; //是否已经启动
     private final NodeContext context; // 核心上下文组件
     private volatile AbstractNodeRole role; // 当前的角色与信息
+
     private StateMachine stateMachine;
 
     RaftNode(NodeContext context) {
@@ -247,9 +247,9 @@ public class RaftNode implements Node {
      */
     public void replicateLog() {
 
-        // context.taskExecutor().submit(this::doReplicateLogAll);
+        context.taskExecutor().submit(this::doReplicateLogAll);
 
-        doReplicateLogAll();
+        // doReplicateLogAll();
     }
 
     private void doReplicateLogAll() {
@@ -354,8 +354,8 @@ public class RaftNode implements Node {
     public void onReceiveAppendEntriesResult(AppendEntriesResult result, AppendEntriesRpc rpc) {
         LOGGER.debug("Node {} received {} from node {}", context.selfId(), result, rpc.getLeaderId());
         
-        context.taskExecutor().submit(() -> doProcessAppendEntriesResult(result, rpc));
-        // doProcessAppendEntriesResult(result);
+//        context.taskExecutor().submit(() -> doProcessAppendEntriesResult(result, rpc));
+         doProcessAppendEntriesResult(result, rpc);
     }
 
 
@@ -420,8 +420,8 @@ public class RaftNode implements Node {
     }
 
     @Override
-    public void registerStateMachine(KVService service) {
-        this.stateMachine = service;
+    public void registerStateMachine(StateMachine stateMachine) {
+        this.stateMachine = stateMachine;
     }
 
     private void resetReplicatingStates() {
@@ -429,6 +429,14 @@ public class RaftNode implements Node {
     }
 
     public void appendLog(byte[] bytes) {
+        if (!(role instanceof LeaderNodeRole)) {
+            LOGGER.error("Current role is not leader, abort appending log");
+            return;
+        }
+        context.taskExecutor().submit(() -> {
+            context.log().appendEntry(role.getTerm(), bytes);
+            replicateLog();
+        });
     }
 
 }

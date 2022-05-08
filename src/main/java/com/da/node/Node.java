@@ -1,6 +1,6 @@
 package com.da.node;
 
-import com.da.kv.server.KVService;
+import com.da.log.stateMachine.StateMachine;
 
 /**
  * 节点接口
@@ -11,6 +11,8 @@ public interface Node {
     
     void stop() throws InterruptedException;
 
-    void registerStateMachine(KVService service);
+    void registerStateMachine(StateMachine stateMachine);
+
+    void appendLog(byte[] commandBytes);
 
 }

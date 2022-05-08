@@ -6,6 +6,14 @@
     "configurations": [
         {
             "type": "java",
+            "name": "Launch ClientLauncher",
+            "request": "launch",
+            "args": "-gc A,localhost,3333 B,localhost,3334 C,localhost,3335",
+            "mainClass": "com.da.kv.client.ClientLauncher",
+            "projectName": "splendor-raft"
+        },
+        {
+            "type": "java",
             "name": "Launch Current File",
             "request": "launch",
             "mainClass": "${file}"
