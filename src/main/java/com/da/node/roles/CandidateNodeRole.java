@@ -31,5 +31,15 @@ public class CandidateNodeRole extends AbstractNodeRole {
         LOGGER.debug("Candidate election timeout task cancelled.");
         electionTimeout.cancel();   
     }
+
+
+    @Override
+    public String toString() {
+        return "CandidateNodeRole{" +
+                "term=" + term +
+                ", votesCount=" + votesCount +
+                ", electionTimeout=" + electionTimeout +
+                '}';
+    }
     
 }

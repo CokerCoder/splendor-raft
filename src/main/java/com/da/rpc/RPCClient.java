@@ -42,11 +42,8 @@ public class RPCClient {
                 .build();
         
         RequestVoteReply reply = null;
-        try {
-            reply = blockingStub.requestVote(rpcRequest);
-        } catch (Exception e) {
-            LOGGER.error("requestVote rpc error");
-        }
+
+        reply = blockingStub.requestVote(rpcRequest);
        
        return new RequestVoteResult(reply.getTerm(), reply.getVoteGranted());
     }
@@ -73,11 +70,8 @@ public class RPCClient {
                 .build();
 
         AppendEntriesReply reply = null;
-        try {
-            reply = blockingStub.appendEntries(rpcRequest);
-        } catch (Exception e) {
-            LOGGER.error("appendEntries rpc error");
-        }
+
+        reply = blockingStub.appendEntries(rpcRequest);
        
        return new AppendEntriesResult(reply.getTerm(), reply.getSuccess());
     }

@@ -111,7 +111,8 @@ public class RaftNode implements Node {
                     try {
                         onReceiveRequestVoteResult(future.get());
                     } catch (InterruptedException | ExecutionException e) {
-                        e.printStackTrace();
+                        LOGGER.warn("Failed to establish connection to {}", dest);
+                        return;
                     }
                 });
 
@@ -129,7 +130,7 @@ public class RaftNode implements Node {
     }
 
     private void changeToRole(AbstractNodeRole newRole) {
-        LOGGER.debug("Node {}, role state changed -> {}, current term: {}", context.selfId(), newRole, newRole.getTerm());
+        LOGGER.debug("Node {}, role state changed -> {}", context.selfId(), newRole);
         role = newRole;
     }
 
@@ -190,7 +191,6 @@ public class RaftNode implements Node {
 
 
     public void onReceiveRequestVoteResult(RequestVoteResult result) {
-        if (result == null) return;
         LOGGER.debug("Node {} received {}", context.selfId(), result);
         // context.taskExecutor().submit(() -> doProcessRequestVoteResult(result));
         doProcessRequestVoteResult(result);
@@ -277,9 +277,10 @@ public class RaftNode implements Node {
             () -> {
                 try {
                     // with the associated rpc
-                    onReceiveAppendEntriesResult(future.get(), rpc);
+                    onReceiveAppendEntriesResult(future.get(),rpc , member.getEndpoint());
                 } catch (Exception e) {
-                    LOGGER.error("Replicate log rpc error");
+                    LOGGER.warn("Failed to establish connection to {}", member.getEndpoint());
+                    return;
                 }
             });
 
@@ -351,15 +352,15 @@ public class RaftNode implements Node {
     }
 
 
-    public void onReceiveAppendEntriesResult(AppendEntriesResult result, AppendEntriesRpc rpc) {
-        LOGGER.debug("Node {} received {} from node {}", context.selfId(), result, rpc.getLeaderId());
+    public void onReceiveAppendEntriesResult(AppendEntriesResult result, AppendEntriesRpc rpc, NodeEndpoint from) {
+        LOGGER.debug("Node {} received {} from {}", context.selfId(), result, from);
         
 //        context.taskExecutor().submit(() -> doProcessAppendEntriesResult(result, rpc));
-         doProcessAppendEntriesResult(result, rpc);
+         doProcessAppendEntriesResult(result, rpc, from);
     }
 
 
-    private void doProcessAppendEntriesResult(AppendEntriesResult result, AppendEntriesRpc rpc) {
+    private void doProcessAppendEntriesResult(AppendEntriesResult result, AppendEntriesRpc rpc, NodeEndpoint from) {
 
         if (result == null) {
             return;
@@ -374,16 +375,16 @@ public class RaftNode implements Node {
 
         // check role
         if (role.getName() != RoleName.LEADER) {
-            LOGGER.debug("reveive append entries result from node {} but current node is not leader, ignore", rpc.getLeaderId());
+            LOGGER.debug("reveive append entries result from {} but current node is not leader, ignore", from);
             return;
         }
 
-        NodeId sourceNodeId = rpc.getLeaderId();
-
+        NodeId sourceNodeId = from.getId();
         GroupMember member = context.group().getMember(sourceNodeId);
+
         // 没有指定的成员
         if (member == null) {
-            LOGGER.debug("unexpected append entries result from node {}, node maybe removed", sourceNodeId);
+            LOGGER.debug("unexpected append entries result from {}, node maybe removed", sourceNodeId);
             return;
         }
 
