@@ -257,7 +257,7 @@ public class RaftNode implements Node {
         LOGGER.debug("Replication target group: {}", context.group().listReplicationTarget());
 
         for (GroupMember member : context.group().listReplicationTarget()) {
-            // todo: can be wrong
+            
             doReplicateLog(member, Log.ALL_ENTRIES);
             //doReplicateLog(member, context.config().getMaxReplicationEntries());
         }
