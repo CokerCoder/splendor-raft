@@ -39,7 +39,7 @@ public class RPCChannel {
         if (response.getSuccess()) {
             return new SetCommandResponse();
         }
-        else if (!response.getLeaderId().isEmpty()) {
+        else if (response.getLeaderId() != null) {
             return new SetCommandResponse(response.getLeaderId());
         }
         return new SetCommandResponse(response.getErrorCode(), response.getErrorMessage());

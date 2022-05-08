@@ -122,7 +122,7 @@ public class KVClient {
         }
         else {
             byte[] result = serverRouter.get(key);
-            System.out.println(Arrays.toString(result));
+            System.out.println(new String(result));
         }
     }
 

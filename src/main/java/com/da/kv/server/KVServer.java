@@ -86,7 +86,12 @@ public class KVServer {
                 request.getKey(), request.getValue().toByteArray());
             SetCommandResponse response = service.set(command);
 
-            SetResponse reply = setResponseBuilder.setSuccess(true).build();
+            SetResponse reply = setResponseBuilder
+                                    .setSuccess(response.isSuccess())
+                                    .setErrorCode(response.getErrorCode())
+                                    .setErrorMessage(response.getErrorMessage() == null ? "" : response.getErrorMessage())
+                                    .setLeaderId(response.getLeaderId() == null ? "" : response.getLeaderId())
+                                    .build();
 
             responseObserver.onNext(reply);
             responseObserver.onCompleted();

@@ -26,13 +26,21 @@ public class ServerRouter {
 
     public void set(String key, byte[] value) {
         SetCommandResponse response = availableServers.get(leaderId).set(new SetCommand(key, value));
-        while (!response.getLeaderId().isEmpty()) { // TODO
+        while (response.getLeaderId() != null) { // TODO
+            // currently no leader, electing
+            if (response.getLeaderId().isEmpty()) {
+                System.out.println("Server temporarily unavailable, please try again.");
+                return;
+            }
             logger.debug("redirect to server {}", response.getLeaderId());
             leaderId = new NodeId(response.getLeaderId());
-            response = availableServers.get(leaderId).set(new SetCommand(key, value));
+            RPCChannel leaderChannel = availableServers.get(leaderId);
+            if (leaderChannel != null) {
+                response = leaderChannel.set(new SetCommand(key, value));
+            }
         }
-        if (!response.getErrorMessage().isEmpty()) { // TODO
-            logger.info(response.getErrorMessage());
+        if (response.getErrorMessage() != null) { // TODO
+            logger.error(response.getErrorMessage());
         }
     }
 
